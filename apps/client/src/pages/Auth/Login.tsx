@@ -22,9 +22,13 @@ import { loginSchema, type LoginInput } from "@repo/zod-schemas"
 
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
+import { useDispatch } from "react-redux"
+import type { AppDispatch } from "@/Redux/stroe"
+import { addAuth } from "@/Redux/Slice/Auth/Auth"
 
 export function Login() {
   const navigate = useNavigate()
+  const dispatch=useDispatch<AppDispatch>()
 
   const {
     register,
@@ -58,7 +62,7 @@ export function Login() {
         }, 1200)
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || "Invalid credentials")
+      toast.error(error.message||error?.response?.data?.message || "Invalid credentials")
       console.error(error)
     }
   }
@@ -66,9 +70,11 @@ export function Login() {
   const responseGoogle = async (authResult: any) => {
     try {
       if (authResult?.code) {
-        await axios.get(`http://localhost:8080/auth/googleLogin?code=${authResult.code}`, {
+        const response=await axios.get(`http://localhost:8080/auth/googleLogin?code=${authResult.code}`, {
           withCredentials: true,
         })
+        console.log(response.data)
+        dispatch(addAuth(response.data.user))
         toast.success("Logged in with Google!")
         navigate("/")
       }
@@ -88,7 +94,7 @@ export function Login() {
     <div>
       <LandingNav />
 
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex justify-center items-center h-screen mt-5">
         <Card className="relative w-[380px] overflow-hidden mt-6">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl">Welcome Back</CardTitle>

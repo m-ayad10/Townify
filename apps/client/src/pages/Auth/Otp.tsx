@@ -16,11 +16,15 @@ import { toast } from "sonner"
 import { resendOtpApi, verifyOTP } from "@/api/authApi"
 import { useLocation } from "react-router-dom";
 import { Spinner } from "@/components/ui/spinner"
+import { useDispatch } from "react-redux"
+import type { AppDispatch } from "@/Redux/stroe"
+import { addAuth } from "@/Redux/Slice/Auth/Auth"
 
 export function OTP() {
 
     const navigate = useNavigate()
     const location = useLocation();
+    const dispatch=useDispatch<AppDispatch>()
     const emailFromState = location.state?.email;
     const [sendOtp, setsendOtp] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(false);
@@ -72,6 +76,7 @@ export function OTP() {
             const response = await verifyOTP({ email, otp });
             console.log(response)
             if (response) {
+                dispatch(addAuth(response.data.user))
                 toast.success("LoggedIn Successful!.", {
                     action: {
                         label: "Home",
