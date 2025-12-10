@@ -21,9 +21,13 @@ import { signupSchema, type SignupInput } from "@repo/zod-schemas"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { registerUser } from "@/api/authApi"
+import { useDispatch } from "react-redux"
+import { addAuth } from "@/Redux/Slice/Auth/Auth"
+import type { AppDispatch } from "@/Redux/stroe"
 
 export function SignUp() {
   const navigate = useNavigate()
+  const dispatch=useDispatch<AppDispatch>()
 
   const {
     register,
@@ -52,16 +56,18 @@ export function SignUp() {
 
       setTimeout(() => navigate("/login"), 1000)
     } catch (error: any) {
-      toast.error(error?.message || "Something went wrong")
+      console.log(error)
+      toast.error(error?.response.data.message || "Something went wrong")
     }
   }
 
   const responseGoogle = async (authResult: any) => {
     try {
       if (authResult?.code) {
-        await axios.get(`http://localhost:8080/auth/googleLogin?code=${authResult.code}`, {
+        const response=await axios.get(`http://localhost:8080/auth/googleLogin?code=${authResult.code}`, {
           withCredentials: true,
         })
+        dispatch(addAuth(response.data.user))
         navigate("/")
       }
     } catch (error) {
@@ -80,7 +86,7 @@ export function SignUp() {
     <div>
       <LandingNav />
 
-      <div className="flex justify-center items-center h-screen">
+      <div className="flex justify-center items-center h-screen mt-9">
         <Card className="relative w-[380px] overflow-hidden mt-6">
           <CardHeader>
             <CardTitle>Sign Up</CardTitle>

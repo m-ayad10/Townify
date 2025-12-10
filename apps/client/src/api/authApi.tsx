@@ -21,4 +21,13 @@ export const resendOtpApi = async (data : any) => {
 };
 
 
+export const getUser=async()=>
+{
+  return axiosInstance.get("/auth/user")
+}
+
+export const updateUserApi=async(data:FormData)=>
+{
+  return axiosInstance.patch("/auth/user",data)
+}
 
