@@ -154,8 +154,8 @@ export function Login() {
               </div>
             </div>
 
-            <Button onClick={() => googleLogin()} variant="outline" className="w-full">
-              <GoogleIcon className="mr-2 h-5 w-5" />
+            <Button onClick={() => googleLogin()} variant="outline" className="w-full cursor-pointer">
+              <GoogleIcon className="mr-2 h-5 w-5 " />
               Continue with Google
             </Button>
 
@@ -164,7 +164,7 @@ export function Login() {
               <button
                 type="button"
                 onClick={() => navigate("/signup")}
-                className="font-medium underline underline-offset-4 hover:text-primary"
+                className="font-medium underline underline-offset-4 hover:text-primary cursor-pointer"
               >
                 Sign up
               </button>
