@@ -17,10 +17,10 @@ const AuthSlice=createSlice({
     name:'auth',
     initialState:intialState,
     reducers:{
-        addAuth:(state,actiion)=>{
-            state.user=actiion.payload
+        addAuth:(state,action)=>{
+            state.user=action.payload
         },
-        removeAuth:(state,_)=>{
+        removeAuth:(state)=>{
             state.user={};
             state.status='idle'
         }

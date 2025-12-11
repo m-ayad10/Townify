@@ -20,6 +20,10 @@ export const resendOtpApi = async (data : any) => {
   return await axiosInstance.post("/auth/resend-otp", data);
 };
 
+export const LogoutApi = async () => {
+  return await axiosInstance.post("/auth/logout");
+};
+
 
 export const getUser=async()=>
 {

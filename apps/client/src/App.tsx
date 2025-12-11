@@ -9,6 +9,10 @@ import {  useDispatch } from "react-redux";
 import { type AppDispatch } from "./Redux/stroe";
 import { useEffect } from "react";
 import { fetchUser } from "./Redux/Slice/Auth/AuthThunk";
+import Dashboard from "./pages/Dashboard";
+import InviteMembers from "./pages/InviteMembers";
+import RoomLobby from "./pages/RoomLobby";
+import Pricing from "./pages/Pricing";
 
 function App() {
   const dispatch=useDispatch<AppDispatch>()
@@ -23,6 +27,10 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<SignUp />} />
             <Route path="/auth/otp" element={<OTP />} />
+            <Route path="/pricing" element={<Pricing />} />
+            <Route path="/app" element={<Dashboard />} />
+            <Route path="/invite" element={<InviteMembers />} />
+            <Route path="/lobby" element={<RoomLobby />} />
         </Routes>
       </BrowserRouter>
     </GoogleOAuthProvider>

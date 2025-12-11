@@ -160,7 +160,7 @@ export function SignUp() {
             <Button
               onClick={() => GoogleLogin()}
               variant="outline"
-              className="w-full"
+              className="w-full cursor-pointer"
               type="button"
             >
               <GoogleIcon className="mr-2" />
@@ -172,7 +172,7 @@ export function SignUp() {
               <button
                 type="button"
                 onClick={() => navigate("/login")}
-                className="underline underline-offset-4 hover:text-primary"
+                className="underline underline-offset-4 hover:text-primary cursor-pointer"
               >
                 Log in
               </button>
