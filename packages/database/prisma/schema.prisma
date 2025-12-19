@@ -36,7 +36,10 @@ model User {
   profile      String?
   role         UserRole     @default(user) // enum
   avatarId     String?
+
   avatar       Avatar?      @relation("UserAvatar", fields: [avatarId], references: [id])
+  space        Space[]
+  spaceMember  SpaceMembers[]
 }
 
 model Avatar {
@@ -53,4 +56,33 @@ model Map{
   thumbnail String
   thumbnailId String
   configJson Json
+
+  spaces Space[]
+}
+
+
+model Space{
+  id String @id @default(uuid())
+  name String
+  creatorId String
+  mapId String
+  slug String @unique @default(uuid())
+
+  map    Map   @relation(fields: [mapId] ,references: [id])
+  creator User @relation(fields: [creatorId], references: [id])
+
+  spaceMembers SpaceMembers[]
+}
+
+
+model SpaceMembers{
+  id String @id @default(uuid())
+  slugId String 
+  userId String
+  isActive Boolean @default(true)
+  joinedAt DateTime @default(now())
+
+  user User @relation(fields: [userId],references: [id])
+  space Space @relation(fields: [slugId], references: [slug])
+
 }

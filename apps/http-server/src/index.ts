@@ -2,6 +2,7 @@ import express, { type Request, type Response } from "express";
 import router from "./Users/routes.js";
 import avatarRouter from "./Avatar/routes.js";
 import mapRouter from "./Map/routes.js";
+import spaceRouter from "./Spaces/routes.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
 
@@ -26,6 +27,7 @@ app.use(express.json());
 app.use('/auth',router)
 app.use('/avatar', avatarRouter)
 app.use('/map',mapRouter)
+app.use('/spaces',spaceRouter)
 
 app.listen(8080,()=>{
     console.log("Server Listining at 8080")

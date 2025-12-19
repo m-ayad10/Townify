@@ -108,7 +108,7 @@ const verifyOTP = async (req: Request, res: Response) => {
     // Find user without transaction first
     const user = await prisma.user.findUnique({
       where: { email },
-      include: { avatar: true },
+      include: { avatar: true,space:true },
     });
 
     if (!user) {
@@ -143,6 +143,7 @@ const verifyOTP = async (req: Request, res: Response) => {
         email: user.email,
         role: user.role,
         profile: user.profile,
+        space:user.space,   
       },
     });
   } catch (error) {
@@ -199,7 +200,7 @@ const googleLogin = async (req: Request, res: Response) => {
     const googleUser = userRes.data;
     let user = await prisma.user.findUnique({
       where: { email: googleUser.email },
-      include: { avatar: true },
+      include: { avatar: true ,space:true},
     });
     if (!user) {
       user = await prisma.user.create({
@@ -210,7 +211,7 @@ const googleLogin = async (req: Request, res: Response) => {
           authProvider: "google",
           googleId: googleUser.id,
         },
-        include: { avatar: true },
+        include: { avatar: true ,space:true},
       });
     }
 
@@ -230,6 +231,7 @@ const googleLogin = async (req: Request, res: Response) => {
         email: user.email,
         role: user.role,
         profile: user.profile,
+        space:user.space
       }});
   } catch (error) {
     res.status(500).json({ message: "Internal server error" });
@@ -254,7 +256,7 @@ const updateUserProfile = async (req: Request, res: Response) => {
     const userId = req.user?.userId;
     const { name, avatarId }: { name: string; avatarId: string } = req.body;
     const profile = req.file;
-    const user = await prisma.user.findUnique({ where: { id: userId || "" } });
+    const user = await prisma.user.findUnique({ where: { id: userId || "" } , include: { avatar: true ,space:true},});
     if (name.length < 1) {
       return res.status(400).json({ message: "Name cannot be empty" });
     }
@@ -282,7 +284,7 @@ const updateUserProfile = async (req: Request, res: Response) => {
     const updatedUser = await prisma.user.update({
       where: { id: userId || "" },
       data: updatedData,
-      include: { avatar: true },
+      include: { avatar: true ,space:true},
     });
     res.status(200).json({
       message: "User updated successfully",
@@ -294,6 +296,7 @@ const updateUserProfile = async (req: Request, res: Response) => {
         email: updatedUser.email,
         role: updatedUser.role,
         profile: updatedUser.profile,
+        space:user.space
       },
     });
   } catch (error) {
