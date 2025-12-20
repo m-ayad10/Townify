@@ -5,15 +5,11 @@ import { createSpace, updateSpace, deleteSpace, getSpace, joinSpace, leaveSpace,
 const router: Router = express.Router()
 
 router.post("/", userMiddleware, createSpace)
-
-router.get("/:id",userMiddleware, getSpace)
 router.get("/user",userMiddleware, getSpaceByUser)
 
-router.post('/email-invitation', userMiddleware, sendInvitationToSpace)
-
-
+router.post('/email-invitation', userMiddleware, sendInvitationToSpace);
+router.get("/:id",userMiddleware, getSpace)
 router.patch("/:id", userMiddleware, updateSpace)
-
 router.delete("/:id", userMiddleware, deleteSpace)
 
 router.post("/join/:slug", userMiddleware, joinSpace)

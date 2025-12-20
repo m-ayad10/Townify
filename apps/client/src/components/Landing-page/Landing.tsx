@@ -1,11 +1,11 @@
-import { Button } from "../ui/button"
 import { RainbowButton } from "../ui/rainbow-button"
 import gsap from 'gsap';
 import { useGSAP } from '@gsap/react';
-
+import { useNavigate} from "react-router-dom"
 
 function Landing() {
 
+    const navigate = useNavigate();
     useGSAP(()=>{
         gsap.from('#text > *',{
             opacity: 0,
@@ -58,17 +58,17 @@ function Landing() {
                     </p>
 
                     <div className="flex gap-2 lg:gap-4 items-center py-3 lg:py-8">
-                        <RainbowButton size="sm" responsiveSize="lg" >
+                        <RainbowButton onClick={()=>navigate('/app')} size="sm" responsiveSize="lg" >
                             Explore
                         </RainbowButton>
 
-                        <Button
+                        {/* <Button
 
                             variant="outline"
                             className="font-inter  font-semibold px- py-1 md:px-2 md:py-5.5  text-[10px] md:text-base "
                         >
                             See in Action
-                        </Button>
+                        </Button> */}
                     </div>
                 </div>
 

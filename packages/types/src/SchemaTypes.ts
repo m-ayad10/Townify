@@ -5,6 +5,14 @@ export interface AvatarShema{
   name: string;
 }
 
+export interface spaceI {
+  id : string,
+  name : string,
+  creatorId : string,
+  mapId : string,
+  slug : string
+}
+
 export interface UserSchema{
     id: string;
     email: string;

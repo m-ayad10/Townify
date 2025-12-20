@@ -16,9 +16,35 @@ export interface JoinRoomModalI {
 }
 
 export interface mapTemplateI {
-    id : string,
-    name : string,
-    thumbnail : string,
-    configJson : JSON,
-    thumbnailId : string
+  id: string,
+  name: string,
+  thumbnail: string,
+  configJson: JSON,
+  thumbnailId: string
 }
+
+interface spaceMembersI {
+  id: string,
+  isActive: string,
+  joinedAt: string,
+  slugId: string,
+  userId: string
+}
+
+export interface UserSpace {
+  creatorId: string,
+  id: string,
+  mapId: string,
+  name: string,
+  slug: string,
+  map: {
+    configJson: string,
+    id: string,
+    name: string,
+    thumbnail: string,
+    thumbnailId: string,
+  }
+  spaceMembers: spaceMembersI[]
+}
+
+

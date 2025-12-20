@@ -29,7 +29,7 @@ function App() {
             <Route path="/auth/otp" element={<OTP />} />
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/app" element={<Dashboard />} />
-            <Route path="/invite" element={<InviteMembers />} />
+            <Route path="/invite/:slug" element={<InviteMembers />} />
             <Route path="/lobby" element={<RoomLobby />} />
         </Routes>
       </BrowserRouter>

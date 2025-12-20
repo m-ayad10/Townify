@@ -23,7 +23,7 @@ function DashbaordNav({ setCreateRoom, setJoinRoom }: DashboardNavProps) {
                 {/* Logo + Nav */}
                 <div className="flex items-center gap-10 lg:gap-20">
                     {/* Logo */}
-                    <div className="flex gap-2 items-center cursor-pointer ">
+                    <div onClick={()=>navigate('/')} className="flex gap-2 items-center cursor-pointer ">
                         <img
                             src="https://res.cloudinary.com/dnkenioua/image/upload/v1764999707/Group_ik1uap.png"
                             className=" "

@@ -1,6 +1,8 @@
+import { useNavigate } from "react-router-dom"
 import { RainbowButton } from "../ui/rainbow-button"
 
 function LandDetail() {
+    const navigate = useNavigate();
     return (
 
         <div className="">
@@ -15,7 +17,7 @@ function LandDetail() {
                         team their most productive selves</p>
 
                     <div className="">
-                        <RainbowButton size={"lg"}>Get Your Space</RainbowButton>
+                        <RainbowButton onClick={()=>navigate('/app')} size={"lg"}>Get Your Space</RainbowButton>
                     </div>
                 </div>
 
