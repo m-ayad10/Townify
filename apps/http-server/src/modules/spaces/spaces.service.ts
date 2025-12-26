@@ -166,6 +166,8 @@ export const checkUserSpaceAccessService = async (
   if (space.creatorId === userId) {
     return {
       isOwner: true,
+      spaceId : space.id,
+      userId : userId,
       role: "owner",
     };
   }
@@ -187,6 +189,8 @@ export const checkUserSpaceAccessService = async (
   return {
     isOwner: false,
     role: "member",
+    spaceId : space.id,
+    userId : userId,
   };
 };
 

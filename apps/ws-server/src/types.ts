@@ -3,6 +3,7 @@ import type WebSocket from "ws";
 interface UserI {
   name : string,
   userId : string,
+  avatarId : string,
   x : number,
   y : number,
 }

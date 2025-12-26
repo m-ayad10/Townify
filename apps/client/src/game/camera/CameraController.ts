@@ -2,30 +2,34 @@ import Phaser from "phaser";
 import { CAMERA_CONFIG } from "./cameraConfig";
 
 export default class CameraController {
-  private scene: Phaser.Scene;
   private camera: Phaser.Cameras.Scene2D.Camera;
 
-  constructor(scene: Phaser.Scene, mapWidth: number, mapHeight: number) {
-    this.scene = scene;
+  constructor(
+    scene: Phaser.Scene,
+    mapWidth: number,
+    mapHeight: number
+  ) {
     this.camera = scene.cameras.main;
 
-    this.setupBounds(mapWidth, mapHeight);
-    this.setupZoom();
-    this.enableMouseWheelZoom();
+    this.setBounds(mapWidth, mapHeight);
+    this.setInitialZoom();
+    this.enableMouseWheelZoom(scene);
   }
 
-  private setupBounds(width: number, height: number) {
+  /* -------------------- SETUP -------------------- */
+
+  private setBounds(width: number, height: number) {
     this.camera.setBounds(0, 0, width, height);
   }
 
-  private setupZoom() {
+  private setInitialZoom() {
     this.camera.setZoom(CAMERA_CONFIG.DEFAULT_ZOOM);
   }
 
-  private enableMouseWheelZoom() {
-    this.scene.input.on(
+  private enableMouseWheelZoom(scene: Phaser.Scene) {
+    scene.input.on(
       "wheel",
-      (_pointer : any, _objects : any, _dx : any, dy: any) => {
+      (_pointer : any, _objects: any, _dx: any, dy: any) => {
         let zoom = this.camera.zoom;
 
         if (dy > 0) zoom -= CAMERA_CONFIG.ZOOM_STEP;
@@ -41,6 +45,8 @@ export default class CameraController {
       }
     );
   }
+
+  /* -------------------- PUBLIC API -------------------- */
 
   follow(target: Phaser.GameObjects.GameObject) {
     this.camera.startFollow(target, true, 0.08, 0.08);
