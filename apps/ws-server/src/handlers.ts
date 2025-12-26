@@ -9,7 +9,7 @@ export const handleMessage = (ws: WebSocket, rawMessage: WebSocket.RawData) => {
         const { type, payload } = JSON.parse(rawMessage.toString()) as MessageI;
         if (!type || typeof type !== "string") return;
         if ( !payload || typeof payload !== "object") return;
-        const { userId, name, roomId, x, y } = payload;
+        const { userId, name, roomId, x, y ,avatarId} = payload;
 
         switch (type) {
             case "JOIN_ROOM": {
@@ -27,6 +27,7 @@ export const handleMessage = (ws: WebSocket, rawMessage: WebSocket.RawData) => {
                 room.users.set(userId, {
                     userId,
                     name,
+                    avatarId ,
                     x: 522,
                     y: 655
                 });
@@ -46,8 +47,9 @@ export const handleMessage = (ws: WebSocket, rawMessage: WebSocket.RawData) => {
                     payload: {
                         userId,
                         name,
-                        x: 256,
-                        y: 56,
+                        avatarId,
+                        x: 522,
+                        y: 655,
                     },
                 }, userId);
                 break;

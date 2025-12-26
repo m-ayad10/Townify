@@ -61,3 +61,17 @@ export interface AllAvatarsModalI {
   setCurrentAvatars: React.Dispatch<React.SetStateAction<Avatar | null>>;
   avatars: Avatar[];
 }
+
+export interface AvatarSchema {
+  id: string;
+  name: string;
+  idle: string;        
+  walkSheet: string;   
+}
+
+export interface PlayerIdentity {
+  roomId :string,
+  userId: string;
+  name: string;
+  avatarId: string;
+}

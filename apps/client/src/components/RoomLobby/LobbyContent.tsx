@@ -83,7 +83,7 @@ function LobbyContent() {
       await dispatch(updateUser(formData)).unwrap();
 
       // ✅ REDIRECT TO PHASER ROOM
-      navigate(`/room/${slug}`);
+      navigate(`/space/${slug}`);
     } catch (error) {
       console.error(error);
     } finally {
@@ -163,18 +163,24 @@ function LobbyContent() {
                 </div>
 
                 <div className="pl-4">
-                  <RainbowButton
-                    onClick={handleSubmit}
-                    className="font-bricogrotesque w-80 h-10 mt-4 text-base"
-                  >
-                    {joinLoading ? (
-                      <h1 className="flex items-center gap-2">
+
+                  {joinLoading ? (
+                    <RainbowButton
+                      className="font-bricogrotesque w-80 h-10 mt-4 text-base bg-gray-200"
+                    >
+                      <h1 className="flex items-center  gap-2">
                         <Spinner /> Joining
                       </h1>
-                    ) : (
-                      <h1>Join</h1>
-                    )}
-                  </RainbowButton>
+                    </RainbowButton>
+                  ) : (
+                    <RainbowButton
+                      onClick={handleSubmit}
+                      className="font-bricogrotesque w-80 h-10 mt-4 text-base"
+                    >
+                      <h1 >Join</h1>
+                    </RainbowButton>
+                  )}
+
                 </div>
               </div>
             </div>
