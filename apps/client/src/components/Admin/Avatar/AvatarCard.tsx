@@ -1,10 +1,10 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import type { AvatarSchema } from "@repo/types";
+import type { AvatarI } from "@repo/types";
 
 // Avatar Card Component
 interface AvatarCardProps {
-  avatar: AvatarSchema;
+  avatar: AvatarI;
   onDelete: () => void;
   onEdit: () => void;
 }

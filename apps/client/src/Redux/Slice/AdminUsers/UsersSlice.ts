@@ -1,11 +1,11 @@
 import { createSlice } from "@reduxjs/toolkit";
-import type { UserSchema } from "@repo/types";
+import type { UserI } from "@repo/types";
 import { fetchAdminDashboard, userStatusToggle } from "./UsersThunk";
 
 
 
 interface UsersState {
-    users: UserSchema[]|[];
+    users: UserI[]|[];
     status: 'idle' | 'loading' | 'succeeded' | 'failed';
     error: string | null;
 }

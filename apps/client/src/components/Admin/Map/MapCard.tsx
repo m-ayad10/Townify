@@ -1,12 +1,12 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
-import type { MapSchema } from "@repo/types";
+import type { MapSchemaI } from "@repo/types";
 import { useState } from "react";
 
 // Map Card Component
 interface MapCardProps {
-  map: MapSchema;
+  map: MapSchemaI;
   onDelete: () => void;
   onEdit: () => void;
 }

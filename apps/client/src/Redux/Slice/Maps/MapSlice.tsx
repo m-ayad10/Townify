@@ -1,12 +1,12 @@
 import { createSlice } from "@reduxjs/toolkit";
-import type {MapSchema} from '@repo/types'
+import type {MapSchemaI} from '@repo/types'
 import { deleteMap, fetchAllMaps, updateMap, uploadMap } from "./MapThunk";
 
 
 interface MapState{
     status:'idle' | 'loading' | 'succeeded' | 'failed';
     error:string | null;
-    maps: MapSchema[];
+    maps: MapSchemaI[];
 }
 
 const initialState:MapState={

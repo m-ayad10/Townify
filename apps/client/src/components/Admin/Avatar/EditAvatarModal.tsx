@@ -1,5 +1,5 @@
 import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import type { AvatarSchema } from "@repo/types";
+import type { AvatarI } from "@repo/types";
 import AvatarForm from "./AvatarForm";
 
 
@@ -10,7 +10,7 @@ interface AvatarFormData {
 }
 
 interface EditAvatarModalProps {
-  avatar: AvatarSchema;
+  avatar: AvatarI;
   onUpdate: (data: AvatarFormData) => void;
   isSubmitting?: boolean;
 }

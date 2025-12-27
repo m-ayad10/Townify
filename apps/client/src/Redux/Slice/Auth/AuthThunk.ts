@@ -1,12 +1,12 @@
 import { getUser, updateUserApi } from "../../../api/userApi";
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import type { UserSchema } from "@repo/types";
+import type { UserI } from "@repo/types";
 
 
 
 interface UserReturn
 {
-    user:UserSchema,
+    user:UserI,
     message:string
 }
 

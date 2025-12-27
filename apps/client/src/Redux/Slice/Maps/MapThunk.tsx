@@ -1,11 +1,11 @@
 import { deleteMapApi, fetchMapsApi, mapUploadApi, updateMapApi } from "@/api/mapApi";
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import type { MapSchema } from "@repo/types";
+import type { MapSchemaI } from "@repo/types";
 import { toast } from "sonner";
 
 interface MapReturn {
     message: string;
-    map:MapSchema
+    map:MapSchemaI
 }
 
 const uploadMap = createAsyncThunk<MapReturn,FormData,{rejectValue:string}> ("map/uploadMap",async(data,{rejectWithValue}) => {
@@ -19,7 +19,7 @@ const uploadMap = createAsyncThunk<MapReturn,FormData,{rejectValue:string}> ("ma
     }
 });
 
-const fetchAllMaps=createAsyncThunk<{maps:MapSchema[]},void,{rejectValue:string}>('maps/fetchAllMaps',async(_,{rejectWithValue})=>{
+const fetchAllMaps=createAsyncThunk<{maps:MapSchemaI[]},void,{rejectValue:string}>('maps/fetchAllMaps',async(_,{rejectWithValue})=>{
     try {
         const response=await fetchMapsApi() 
         return response.data

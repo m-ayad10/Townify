@@ -20,7 +20,7 @@ CREATE TYPE "InviteStatus" AS ENUM ('pending', 'approved', 'rejected');
 ALTER TABLE "SpaceMembers" DROP CONSTRAINT "SpaceMembers_slugId_fkey";
 
 -- AlterTable
-ALTER TABLE "Space" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
+-- ALTER TABLE "Space" ADD COLUMN     "createdAt" TIMESTAMP(3) NOT NULL DEFAULT CURRENT_TIMESTAMP;
 
 -- AlterTable
 ALTER TABLE "SpaceMembers" DROP COLUMN "isActive",

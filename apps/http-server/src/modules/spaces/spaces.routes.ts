@@ -13,12 +13,16 @@ import {
   deleteSpace,
   joinSpace,
   leaveSpace,
-  blockUser,
   sendInvitation,
   getUserSpaces,
   findSpaceBySlug,
   requestAccessToSpace,
   checkSpaceAccess,
+  removeInvites,
+  approveRequestAccess,
+  toggleMember,
+  bulkRemoveInvites,
+  bulkApproveInvites,
 } from "./spaces.controller.js";
 
 const router:Router = Router();
@@ -43,13 +47,17 @@ router.post("/request-access/:slug", userMiddleware, requestAccessToSpace);
 router.post("/leave/:slug", userMiddleware, leaveSpace);
 
 // ---------- OWNER ACTIONS ----------
-router.post("/block/:slug/:userIdToBlock", userMiddleware, blockUser);
+router.patch("/toogle/:slug/:userId", userMiddleware, toggleMember);
 router.post("/email-invitation", userMiddleware, sendInvitation);
-
+router.delete("/invites/:id", userMiddleware, removeInvites);
+router.patch("/approve-invite/:inviteId",userMiddleware,approveRequestAccess);
+router.delete('/bulk-remove/:slug',userMiddleware, bulkRemoveInvites);
+router.patch('/bulk-approve/:slug',userMiddleware, bulkApproveInvites);
 // ---------- SPACE MANAGEMENT ----------
 router.patch("/:id", userMiddleware, updateSpace);
 router.delete("/:id", userMiddleware, deleteSpace);
 router.post("/", userMiddleware, createSpace);
+
 
 // ---------- ALWAYS LAST ----------
 router.get("/:slug", userMiddleware, findSpaceBySlug);

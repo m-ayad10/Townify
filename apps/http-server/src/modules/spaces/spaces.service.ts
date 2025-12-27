@@ -8,19 +8,29 @@ import {
   addMember,
   findMember,
   removeMember,
-  blockMember,
   createEmailInviteRepo,
   findUserById,
-  UserInvited,
   findMemberBySpaceIdAndUserId,
   findPendingInviteByEmail,
   createMember,
   approveInviteById,
   findInviteByEmail,
   createLinkInvite,
+  findInvitesBySpaceId,
+  deleteInviteById,
+  removeMemberByEmailAndSpaceId,
+  findInviteById,
+  toogleMember,
+  bulkDeleteInvitesByIds,
+  bulkRemoveMembersByIds,
+  getApprovedInvitesByIds,
+  bulkApproveInvitesByIds,
+  bulkAddMembers,
+  getUserIdsFromInvites,
 } from "./spaces.repository.js";
-import { sendInvitationEmail } from "../../shared/services/nodemailer.service.js";
+import { inviteApprovalEmail, sendInvitationEmail } from "../../shared/services/nodemailer.service.js";
 import { cacheDel } from "@repo/cache/dist/index.js";
+import { prisma } from "@repo/database";
 
 
 export const createSpaceService = async (
@@ -46,6 +56,7 @@ export const updateSpaceService = async (
 ) => {
   const space = await findSpaceById(spaceId);
   if (!space) throw new Error("SPACE_NOT_FOUND");
+  if(!mapId) throw new Error("MAP_ID_REQUIRED");
   if (space.creatorId !== userId) throw new Error("FORBIDDEN");
 
   await cacheDel("spaces:list")
@@ -65,11 +76,11 @@ export const deleteSpaceService = async (
   if (space.creatorId.toString() != userId) throw new Error("FORBIDDEN");
 
   await cacheDel("spaces:list")
-  await deleteSpaceRepo(spaceId, space.slug);
+  await deleteSpaceRepo(spaceId);
 };
 
 export const joinSpaceService = async (slug: string, userId: string) => {
-  //  Find space
+ 
   const space = await findSpaceBySlug(slug);
   if (!space) throw new Error("SPACE_NOT_FOUND");
 
@@ -111,19 +122,18 @@ export const leaveSpaceService = async (spaceId: string, userId: string) => {
   await removeMember(member.id);
 };
 
-export const blockUserService = async (
+export const toggleMemberService = async (
   slug: string,
   creatorId: string,
-  userIdToBlock: string
+  userId: string
 ) => {
   const space = await findSpaceBySlug(slug);
   if (!space) throw new Error("SPACE_NOT_FOUND");
   if (space.creatorId !== creatorId) throw new Error("FORBIDDEN");
-
-  const member = await findMember(slug, userIdToBlock);
+  const member = await findMember(space.id, userId);
   if (!member) throw new Error("NOT_MEMBER");
-
-  return blockMember(member.id);
+  const status=member.status==="active"?"blocked":"active";
+  return toogleMember(member.id,status);
 };
 
 export const sendInvitationService = async (
@@ -152,6 +162,7 @@ export const sendInvitationService = async (
       );
     })
   );
+  return findInvitesBySpaceId(space.id);
 };
 
 export const checkUserSpaceAccessService = async (
@@ -198,8 +209,14 @@ export const getUserSpacesService = async (userId: string) => {
   return getSpacesByUser(userId);
 };
 
-export const findSpaceBySlugService = async (slug: string) => {
-  return findSpaceBySlug(slug);
+export const findSpaceBySlugService = async (slug: string,userId: string) => {
+  const space = await findSpaceBySlug(slug);
+  if (!space) throw new Error("SPACE_NOT_FOUND");
+  const members=await findMemberBySpaceIdAndUserId(space.id,userId);
+  if(!members){
+    throw new Error("FORBIDDEN");
+  }
+  return space;
 }
 
 export const requestAccessService = async (
@@ -233,8 +250,82 @@ export const requestAccessService = async (
     }
   }
 
-  //  Create request invite (LINK TYPE)
-  await createLinkInvite(space.id, user.email);
+  await createLinkInvite(space.id, user.email,userId);
 
   return true;
 };
+
+
+export const removeInvitesService=async(userId:string,inviteId:string)=>{
+  const inivite=await findInviteById(inviteId);
+  if(!inivite) throw new Error("INVITE_NOT_FOUND");
+  const spaceId=inivite.spaceId;
+  const email=inivite.email;
+  const space = await findSpaceById(spaceId);
+  if (!space) throw new Error("SPACE_NOT_FOUND");
+  if (space.creatorId.toString() != userId) throw new Error("FORBIDDEN");
+  const member=await findMemberBySpaceIdAndUserId(spaceId,inivite.userId||'');
+  if(!member) 
+  {
+    await deleteInviteById(inviteId,spaceId||'')
+    return
+  }
+  await prisma.$transaction ([
+    deleteInviteById(inviteId,spaceId||''),
+    removeMemberByEmailAndSpaceId(spaceId,email||''),
+  ]);
+} 
+
+export const approveInviteService = async (inviteId: string,userId:string) => {
+  const invite = await findInviteById(inviteId);
+  if (!invite) throw new Error("INVITE_NOT_FOUND");
+  const space=await findSpaceById(invite.spaceId);
+  if(!space) throw new Error("SPACE_NOT_FOUND");
+  if(space.creatorId.toString()!==userId) throw new Error("FORBIDDEN");
+  const [member, invites] = await prisma.$transaction([
+    addMember(invite.spaceId, invite.userId!),
+    approveInviteById(inviteId),
+  ])
+  await inviteApprovalEmail(
+    invite.email||"",
+    space.name,
+    `${process.env.CLIENT_URL||'http://localhost:5173'}/lobby/${space.slug}`
+  );
+  return { member, invites };
+};
+
+export const bulkRemoveInvitesService=async(userId:string,slug:string,invitationIds:string[])=>{
+  const space = await findSpaceBySlug(slug);
+  if (!space) throw new Error("SPACE_NOT_FOUND");
+  if (space.creatorId.toString() != userId) throw new Error("FORBIDDEN");
+  const emails=await  getApprovedInvitesByIds(space.id, invitationIds);
+  const emailList=emails.map((e)=>e.email).filter((email): email is string => email !== null);
+  const [invites,members]=await prisma.$transaction([
+    bulkDeleteInvitesByIds(space.id, invitationIds),
+    bulkRemoveMembersByIds(space.id, invitationIds,emailList ),
+  ]
+  );
+  return { invites,members  };
+}
+
+export const bulkApproveInvitesService=async(userId:string,slug:string,invitationIds:string[])=>{
+  const space = await findSpaceBySlug(slug);
+  if (!space) throw new Error("SPACE_NOT_FOUND"); 
+  if (space.creatorId.toString() != userId) throw new Error("FORBIDDEN");
+  const userIds=await getUserIdsFromInvites(space.id, invitationIds);
+  const userIdList=userIds.map((u)=>u.userId).filter((id): id is string => id !== null);
+  const emailList=userIds.map((u)=>u.email).filter((email): email is string => email !== null);
+  const url=`${process.env.CLIENT_URL||'http://localhost:5173'}/lobby/${space.slug}`;
+  const spaceApprovedEmail=emailList.map((email)=>inviteApprovalEmail(
+
+    email,
+    space.name,
+    url
+   ));
+  const [invites,members]=await prisma.$transaction([
+    bulkApproveInvitesByIds(space.id, invitationIds),
+    bulkAddMembers(space.id, userIdList),
+   ]);
+   await Promise.allSettled(spaceApprovedEmail)
+   return { invites,members  };
+}

@@ -1,10 +1,10 @@
 import {createSlice} from '@reduxjs/toolkit'
-import type {UserSchema} from '@repo/types'
+import type {UserI} from '@repo/types'
 import { fetchUser, updateUser } from './AuthThunk'
 import { adminLogout } from '../AdminUsers/UsersThunk'
 
 interface AuthState{
-    user:UserSchema | null,
+    user:UserI | null,
     status:'idle' | 'loading' | 'succeeded' | 'failed',
     error:string | null
 }

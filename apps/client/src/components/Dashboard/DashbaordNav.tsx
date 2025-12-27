@@ -3,7 +3,7 @@ import { Button } from "../ui/button"
 import { RainbowButton } from "../ui/rainbow-button"
 import { useNavigate } from "react-router-dom";
 import type { RootState } from "@/Redux/stroe";
-import type { UserSchema } from "@repo/types";
+import type { UserI } from "@repo/types";
 import type React from "react";
 
 interface DashboardNavProps {
@@ -14,7 +14,7 @@ interface DashboardNavProps {
 function DashbaordNav({ setCreateRoom, setJoinRoom }: DashboardNavProps) {
 
     const navigate = useNavigate();
-    const { user } = useSelector((state: RootState) => state.user) as { user: UserSchema };
+    const { user } = useSelector((state: RootState) => state.user) as { user: UserI };
 
     return (
         <div className="fixed top-0 z-100 w-screen bg-white ">
@@ -43,8 +43,8 @@ function DashbaordNav({ setCreateRoom, setJoinRoom }: DashboardNavProps) {
                         <div className="h-10 w-10 rounded-full flex items-center justify-center bg-primary text-white font-semibold uppercase">
                             {user?.profile ? (
                                 <img
-                                    src={user.profile}
-                                    alt={user.name}
+                                    src={user?.profile}
+                                    alt={user?.name}
                                     className="h-10 w-10 rounded-full object-cover"
                                 />
                             ) : (
