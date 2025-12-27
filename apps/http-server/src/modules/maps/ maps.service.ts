@@ -114,11 +114,8 @@ export const updateMapService = async (
 export const deleteMapService = async (id: string) => {
   const map = await getMapByIdRepo(id);
   if (!map) throw new Error("MAP_NOT_FOUND");
-
   if (map.thumbnailId) await deleteFromCloudinary(map.thumbnailId);
-
   await cacheDel("maps:list");
   await cacheDel(`maps:${id}`);
-
   await deleteMapRepo(id);
 };

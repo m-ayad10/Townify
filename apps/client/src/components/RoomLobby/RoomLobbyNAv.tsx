@@ -1,12 +1,12 @@
 import type { RootState } from "@/Redux/stroe"
-import type { UserSchema } from "@repo/types"
+import type { UserI } from "@repo/types"
 import { useSelector } from "react-redux"
 import { useNavigate } from "react-router-dom";
 
 
 function RoomLobbyNAv() {
 
-    const { user } = useSelector((state: RootState) => state.user) as { user: UserSchema };
+    const { user } = useSelector((state: RootState) => state.user) as { user: UserI };
     const navigate = useNavigate();
 
     return (

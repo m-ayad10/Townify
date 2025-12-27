@@ -4,7 +4,7 @@ import AvatarSlice from "./Slice/Avatars/AvatarSlice";
 import  MapSlice from "./Slice/Maps/MapSlice";
 import UsersSlice from "./Slice/AdminUsers/UsersSlice";
 import spaceSlice from "./Slice/Space/SpaceSlice";
-
+import userSpaceSlice from "./Slice/UserSpace/UserSpaceSlice";
 
 
 const store=configureStore({
@@ -13,7 +13,8 @@ const store=configureStore({
         avatars:AvatarSlice,
         maps:MapSlice,
         users:UsersSlice,
-        spaces:spaceSlice
+        spaces:spaceSlice,
+        userSpace:userSpaceSlice,
     }
 })
 

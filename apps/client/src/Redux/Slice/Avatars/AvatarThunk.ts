@@ -1,16 +1,16 @@
 import {deleteAvatarApi, fetchAvatarApi, updateAvatarApi, uploadAvatarApi } from "@/api/avatarApi";
 import { createAsyncThunk } from "@reduxjs/toolkit";
-import type { AvatarSchema } from "@repo/types";
+import type { AvatarI } from "@repo/types";
 import { toast } from "sonner";
 
 
 interface AvatarReturn {
    message: string;
-   avatar: AvatarSchema;
+   avatar: AvatarI;
 }
 const fetchAllAvatar=createAsyncThunk<{
    message: string;
-   avatars: AvatarSchema[];
+   avatars: AvatarI[];
 },void,{rejectValue:string}>('avatars/fetchAllAvatar',async(_,{rejectWithValue})=>{
     try {
         const response=await fetchAvatarApi()

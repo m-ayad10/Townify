@@ -1,11 +1,11 @@
 import { AdminLogoutApi, AdminUserStatusToggleApi, FetchAdminDashboardApi } from "@/api/adminApi";
 import { createAsyncThunk } from "@reduxjs/toolkit"
-import type {  spaceI, UserSchema } from "@repo/types";
+import type { SpaceI, UserI } from "@repo/types";
 import { toast } from "sonner";
 
 interface AdminDashboardReturn  {
-    spaces:spaceI[];
-    users:UserSchema[];
+    spaces: SpaceI[];
+    users: UserI[];
 }
 
 const fetchAdminDashboard= createAsyncThunk<AdminDashboardReturn,void,{rejectValue:string}>('admin/fetchDashboard',async(_,{rejectWithValue})=>{
@@ -18,7 +18,7 @@ const fetchAdminDashboard= createAsyncThunk<AdminDashboardReturn,void,{rejectVal
 }
 )
 
-const userStatusToggle= createAsyncThunk<UserSchema,string,{rejectValue:string}>('admin/toggleUserStatus',async(userId,{rejectWithValue})=>{
+const userStatusToggle= createAsyncThunk<UserI,string,{rejectValue:string}>('admin/toggleUserStatus',async(userId,{rejectWithValue})=>{
     try {
         const response=await AdminUserStatusToggleApi(userId)
         toast.success('User status updated successfully')

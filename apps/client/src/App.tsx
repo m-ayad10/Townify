@@ -16,13 +16,15 @@ import Pricing from "./pages/Pricing";
 import Sidebar from "./components/Admin/Sidebar/Sidebar";
 import AdminDashboard from "./pages/Admin/AdminDashboard";
 import Maps from "./pages/Admin/Maps";
-import Avatars from "./pages/Admin/Avatars";
 import UserManagement from "./pages/Admin/UserManagement";
 import { fetchAllAvatar } from "./Redux/Slice/Avatars/AvatarThunk";
 import { fetchAllMaps } from "./Redux/Slice/Maps/MapThunk";
 import { fetchAdminDashboard } from "./Redux/Slice/AdminUsers/UsersThunk";
 import Space from "./pages/Space";
 import Join from "./pages/Join";
+import EditSpace from "./pages/EditSpace";
+import AvatarPage from "./pages/Admin/Avatar/Avatars";
+import { fetchUserSpacesThunk } from "./Redux/Slice/UserSpace/UserSpaceThunk";
 
 function App() {
   const dispatch=useDispatch<AppDispatch>()
@@ -33,6 +35,7 @@ function App() {
 
   useEffect(()=>{
     if(auth.status!='succeeded') return
+    dispatch(fetchUserSpacesThunk())
     dispatch(fetchAllAvatar())
     dispatch(fetchAllMaps())
     if(auth?.user?.role=="admin"&&auth.status=='succeeded'){
@@ -59,13 +62,14 @@ function App() {
             <Route path="/pricing" element={<Pricing />} />
             <Route path="/app" element={<Dashboard />} />
             <Route path="/join/:slug" element={<Join />} />
+            <Route path="/space/manage/:slug" element={<EditSpace />} />
             <Route path="/invite/:slug" element={<InviteMembers />} />
             <Route path="/lobby/:slug" element={<RoomLobby />} />
             <Route path="/space/:slug" element={<Space />} />
             <Route path="/admin" element={<AdminSideBar/>}>
                   <Route index element={<AdminDashboard />} />
                   <Route path="maps" element={<Maps />} />
-                  <Route path="avatars" element={<Avatars />} />
+                  <Route path="avatars" element={<AvatarPage />} />
                   <Route path="user" element={<UserManagement />} />
             </Route>
         </Routes>

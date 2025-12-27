@@ -1,3 +1,4 @@
+// No leading Markdown code fence found to remove.
 import {  useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,7 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/Redux/stroe";
-import type { AvatarSchema } from "@repo/types";
+import type { AvatarI } from "@repo/types";
 import ShimmerCard from "../../../components/Admin/Avatar/ShimmerCard";
 import AvatarCard from "../../../components/Admin/Avatar/AvatarCard";
 import AvatarForm from "../../../components/Admin/Avatar/AvatarForm";
@@ -25,13 +26,13 @@ interface AvatarFormData {
 }
 
 // Main Avatars Component
-function Avatar() {
+function AvatarPage() {
   const [searchQuery, setSearchQuery] = useState("");
   const avatar = useSelector((state: RootState) => state.avatars);
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch<AppDispatch>();
   const [isPending,startTransition]=useTransition()
-  const [filteredAvatars , setFilteredAvatars] = useState<AvatarSchema[]>([]);
+  const [filteredAvatars , setFilteredAvatars] = useState<AvatarI[]>([]);
   const [open,setOpen]=useState(false)
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -56,7 +57,7 @@ function Avatar() {
 
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState<string | null>(null);
-  const [editingAvatar, setEditingAvatar] = useState<AvatarSchema | null>(null);
+  const [editingAvatar, setEditingAvatar] = useState<AvatarI | null>(null);
 
   const handleDelete = async (id: string) => {
     console.log("Deleting avatar:", id);
@@ -102,7 +103,7 @@ function Avatar() {
     setIsEditing(null);
   };
 
-  const openEditModal = (avatar: AvatarSchema) => {
+  const openEditModal = (avatar: AvatarI) => {
     setEditingAvatar(avatar);
   };
 
@@ -213,4 +214,4 @@ function EmptyState() {
   );
 }
 
-export default Avatar;
+export default AvatarPage;

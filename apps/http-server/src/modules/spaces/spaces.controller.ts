@@ -1,18 +1,21 @@
-import { type Request, type Response } from "express";
+import e, { type Request, type Response } from "express";
 import {
   createSpaceService,
   updateSpaceService,
   deleteSpaceService,
   joinSpaceService,
   leaveSpaceService,
-  blockUserService,
   sendInvitationService,
   getUserSpacesService,
   findSpaceBySlugService,
   requestAccessService,
   checkUserSpaceAccessService,
+  removeInvitesService,
+  approveInviteService,
+  toggleMemberService,
+  bulkRemoveInvitesService,
+  bulkApproveInvitesService,
 } from "./spaces.service.js";
-
 
 export const createSpace = async (req: Request, res: Response) => {
   try {
@@ -64,28 +67,25 @@ export const joinSpace = async (req: Request, res: Response) => {
   }
 };
 
-export const requestAccessToSpace = async (req:Request,res:Response)=>{
+export const requestAccessToSpace = async (req: Request, res: Response) => {
   try {
-    await requestAccessService(
-      req.params.slug as string,
-      req.user!.userId
-    );
-     res.json({ message: "Access request sent" });
-  } catch (e : any) {
+    await requestAccessService(req.params.slug as string, req.user!.userId);
+    res.json({ message: "Access request sent" });
+  } catch (e: any) {
     res.status(400).json({ message: e.message });
   }
-}
+};
 
 export const sendInvitation = async (req: Request, res: Response) => {
   try {
-    await sendInvitationService(
+    const invites = await sendInvitationService(
       req.body.slug,
       req.body.email,
       req.user!.email,
       req.body.url,
       req.user!.userId
     );
-    res.json({ message: "Invitations sent" });
+    res.json({ message: "Invitations sent", invites });
   } catch (e: any) {
     res.status(400).json({ message: e.message });
   }
@@ -96,10 +96,7 @@ export const getUserSpaces = async (req: Request, res: Response) => {
   res.json({ spaces });
 };
 
-export const checkSpaceAccess = async (
-  req: Request,
-  res: Response
-) => {
+export const checkSpaceAccess = async (req: Request, res: Response) => {
   try {
     const result = await checkUserSpaceAccessService(
       req.params.slug as string,
@@ -121,14 +118,14 @@ export const leaveSpace = async (req: Request, res: Response) => {
   }
 };
 
-export const blockUser = async (req: Request, res: Response) => {
+export const toggleMember = async (req: Request, res: Response) => {
   try {
-    const blocked = await blockUserService(
+    const blocked = await toggleMemberService(
       req.params.slug as string,
       req.user!.userId,
-      req.params.userIdToBlock as string
+      req.params.userId as string
     );
-    res.json({ blocked });
+    res.json({ status: blocked.status });
   } catch (e: any) {
     res.status(403).json({ message: e.message });
   }
@@ -137,9 +134,98 @@ export const blockUser = async (req: Request, res: Response) => {
 export const findSpaceBySlug = async (req: Request, res: Response) => {
   try {
     const { slug } = req.params;
-    const space = await findSpaceBySlugService(slug as string);
-    res.json({space});
+    const space = await findSpaceBySlugService(
+      slug as string,
+      req.user!.userId
+    );
+    res.json({ space });
   } catch (error: any) {
+    if (error.message === "SPACE_NOT_FOUND") {
+      return res.status(404).json({ message: "Space not found" });
+    }
+    if (error.message === "FORBIDDEN") {
+      return res.status(403).json({ message: "Forbidden" });
+    }
     res.status(500).json(error);
   }
-}
+};
+
+export const removeInvites = async (req: Request, res: Response) => {
+  try {
+    await removeInvitesService(req.user!.userId, req.params.id as string);
+    res.json({ message: "Invites removed" });
+  } catch (e: any) {
+    if (e.message === "FORBIDDEN") {
+      return res.status(403).json({ message: e.message });
+    } else if (e.message) {
+      return res.status(404).json({ message: e.message });
+    }
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const approveRequestAccess = async (req: Request, res: Response) => {
+  try {
+    const { inviteId } = req.params;
+    const result = await approveInviteService(inviteId!, req.user!.userId);
+    res.json({
+      message: "Invite approved and user added as member",
+      member: result.member,
+    });
+  } catch (error: any) {
+    if (error?.message === "FORBIDDEN") {
+      return res.status(403).json({ message: "Forbidden" });
+    } else if (error?.message) {
+      return res.status(404).json({ message: error.message });
+    }
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const bulkRemoveInvites = async (req: Request, res: Response) => {
+  try {
+    const { slug } = req.params;
+    const { invitationIds } = req.body;
+    if (!Array.isArray(invitationIds) || invitationIds.length === 0) {
+      return res.status(400).json({
+        message: "invitationIds must be a non-empty array",
+      });
+    }
+    await bulkRemoveInvitesService(
+      req.user!.userId,
+      slug as string,
+      invitationIds
+    );
+    res.json({ message: "Invites removed" });
+  } catch (e: any) {
+    if (e.message === "FORBIDDEN") {
+      return res.status(403).json({ message: e.message });
+    } else if (e.message) {
+      return res.status(404).json({ message: e.message });
+    }
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};
+
+export const bulkApproveInvites = async (req: Request, res: Response) => {
+  try {
+    const { slug } = req.params;
+    const result = await bulkApproveInvitesService(
+      req.user!.userId,
+      slug as string,
+      req.body.invitationIds
+    );
+    res.json({
+      message: "Invites approved",
+      invites: result.invites,
+      members: result.members,
+    });
+  } catch (e: any) {
+    if (e.message === "FORBIDDEN") {
+      return res.status(403).json({ message: e.message });
+    } else if (e.message) {
+      return res.status(404).json({ message: e.message });
+    }
+    res.status(500).json({ message: "Internal Server Error" });
+  }
+};

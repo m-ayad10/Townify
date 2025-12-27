@@ -57,3 +57,28 @@ export const requestSpaceAccess = async (slug: string) => {
 export const leaveSpace = async (slug: string) => {
   return axiosInstance.post(`/spaces/leave/${slug}`);
 };
+
+export const updateSpace = async (spaceId: string, name: string, mapId: string) => {
+  return axiosInstance.patch(`/spaces/${spaceId}`, { name, mapId });
+}
+
+
+export const removeInvitation = async (invitationId: string) => {
+  return axiosInstance.delete(`/spaces/invites/${invitationId}`);
+};
+
+export const approveRequestAccess = async (inviteId: string) => { 
+  return axiosInstance.patch(`/spaces/approve-invite/${inviteId}`); 
+}
+
+export const toggleMember = async (slug: string, userId: string) => {
+  return axiosInstance.patch(`/spaces/toogle/${slug}/${userId}`);
+}
+
+export const bulkRemoveInvitations = async (slug: string, invitationIds: string[]) => {
+  return axiosInstance.delete(`/spaces/bulk-remove/${slug}`, { data: { invitationIds } });
+}
+
+export const bulkApproveInvitations = async (slug: string, invitationIds: string[]) => {
+  return axiosInstance.patch(`/spaces/bulk-approve/${slug}`, { invitationIds });
+}

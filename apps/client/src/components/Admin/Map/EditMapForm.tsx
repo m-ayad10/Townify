@@ -1,6 +1,6 @@
 import { DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import MapForm from "./MapForm";
-import type { MapSchema } from "@repo/types";
+import type { MapSchemaI } from "@repo/types";
 
 
 interface MapFormData {
@@ -10,7 +10,7 @@ interface MapFormData {
 }
 
 interface EditMapModalProps {
-  map: MapSchema;
+  map: MapSchemaI;
   onUpdate: (data: MapFormData) => void;
   isSubmitting?: boolean;
 }

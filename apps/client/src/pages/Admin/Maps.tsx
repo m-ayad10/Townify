@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/dialog";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/Redux/stroe";
-import type { MapSchema } from "@repo/types";
+import type { MapSchemaI } from "@repo/types";
 import { deleteMap, updateMap, uploadMap } from "@/Redux/Slice/Maps/MapThunk";
 import MapCard from "../../components/Admin/Map/MapCard";
 import EditMapModal from "../../components/Admin/Map/EditMapForm";
@@ -30,11 +30,11 @@ function Maps() {
 
   const [isCreating, setIsCreating] = useState(false);
   const [isEditing, setIsEditing] = useState<string | null>(null);
-  const [editingMap, setEditingMap] = useState<MapSchema | null>(null);
+  const [editingMap, setEditingMap] = useState<MapSchemaI | null>(null);
 
   const dispatch = useDispatch<AppDispatch>();
   const [isPending, startTransition] = useTransition();
-  const [filteredMaps, setFilteredMaps] = useState<MapSchema[]>([]);
+  const [filteredMaps, setFilteredMaps] = useState<MapSchemaI[]>([]);
   const [open, setOpen] = useState(false);
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -58,8 +58,12 @@ function Maps() {
   }, [map.maps, searchQuery]);
 
   const handleDelete = async (id: string) => {
-    console.log("Deleting map:", id);
-    await dispatch(deleteMap(id));
+    try {
+      console.log("Deleting map:", id);
+    await dispatch(deleteMap(id)).unwrap();
+    } catch (error) {
+      
+    }
   };
 
   const handleCreateMap = async (data: MapFormData) => {
@@ -104,7 +108,7 @@ function Maps() {
     }
   };
 
-  const openEditModal = (map: MapSchema) => {
+  const openEditModal = (map: MapSchemaI) => {
     setEditingMap(map);
   };
 

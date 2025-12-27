@@ -38,18 +38,18 @@ import {
 } from "lucide-react";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "@/Redux/stroe";
-import type { UserSchema } from "@repo/types";
+import type { UserI } from "@repo/types";
 import { userStatusToggle } from "@/Redux/Slice/AdminUsers/UsersThunk";
 
 function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState<string>("all");
-  const [selectedUser, setSelectedUser] = useState<UserSchema | null>(null);
+  const [selectedUser, setSelectedUser] = useState<UserI | null>(null);
   const auth = useSelector((state: RootState) => state.user);
   const users = useSelector((state: RootState) => state.users);
   const [isPending, startTransition] = useTransition();
   const dispatch = useDispatch<AppDispatch>();
-  const [filteredUsers, setFilteredUsers] = useState<UserSchema[]>([]);
+  const [filteredUsers, setFilteredUsers] = useState<UserI[]>([]);
 
   useEffect(() => {
     if (users.status !== "succeeded") return;
@@ -86,12 +86,12 @@ function UserManagement() {
     setStatusFilter("all");
   };
 
-  const openUserDetails = (user: UserSchema) => {
+  const openUserDetails = (user: UserI) => {
     setSelectedUser(user);
   };
 
   // Get user data for modal
-  const getUserModalData = (user: UserSchema) => ({
+  const getUserModalData = (user: UserI) => ({
     id: user.id,
     name: user.name,
     avatar: user.profile,

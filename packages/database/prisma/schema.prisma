@@ -95,7 +95,7 @@ model SpaceMembers {
 }
 
 enum InviteType {
-  email   // creator invited by email
+  email   
   link    // user requested via shared link
 }
 

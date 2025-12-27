@@ -1,9 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
-import type {AvatarSchema} from '@repo/types'
+import type { AvatarI } from '@repo/types'
 import { deleteAvatar, fetchAllAvatar, updateAvatar, uploadAvatar } from "./AvatarThunk";
 
 interface AvatarState{
-    avatars:AvatarSchema[],
+    avatars:AvatarI[],
     status:'idle' | 'loading' | 'succeeded' | 'failed',
     error:string | null
 }

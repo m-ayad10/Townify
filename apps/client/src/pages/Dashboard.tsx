@@ -32,7 +32,7 @@ function Dashboard() {
           }}
         />
         {/* Your Content/Components */}
-        <div className="pt-28 px-14 relative">
+        <div className="pt-28 px-10 relative">
           <DashContent
             JoinRoom={JoinRoom}
             setJoinRoom={setJoinRoom}

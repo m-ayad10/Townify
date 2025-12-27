@@ -1,10 +1,10 @@
 import { createSlice } from "@reduxjs/toolkit";
-import type { spaceI } from "@repo/types";
+import type { SpaceI } from "@repo/types";
 import { fetchAdminDashboard } from "../AdminUsers/UsersThunk";
 
 
 interface SpaceState {
-    spaces: spaceI[]|[];
+    spaces: SpaceI[]|[];
     status: 'idle' | 'loading' | 'succeeded' | 'failed';
     error: string | null;
 }
