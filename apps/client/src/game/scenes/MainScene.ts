@@ -4,11 +4,15 @@ import CameraController from "../camera/CameraController";
 import { setMainScene } from "./sceneRegistry";
 import { flushPendingMessages } from "@/ws/socketHandlers";
 import type { AvatarSchema, PlayerIdentity } from "@/types/type";
+import { parseTiledValue } from "../utils/utils";
+
+
 
 export default class MainScene extends Phaser.Scene {
   private mapUrl: string;
   private avatarMap: Record<string, AvatarSchema>;
   private localPlayerInfo: PlayerIdentity;
+  private playerGroup!: Phaser.Physics.Arcade.Group;
 
   private localPlayer?: Player;
   private remotePlayers = new Map<string, Player>();
@@ -46,6 +50,7 @@ export default class MainScene extends Phaser.Scene {
       rect.setVisible(false);
     });
   }
+
   private chairZones: Phaser.Types.Tilemaps.TiledObject[] = [];
 
 
@@ -68,7 +73,7 @@ export default class MainScene extends Phaser.Scene {
     this.load.tilemapTiledJSON("map", this.mapUrl);
 
     TILESETS.forEach(key => {
-      this.load.image(key, `/tiles/${key}.png`);
+      this.load.image(key, `/tiles/${key}.png`)
     });
 
     // load ALL avatar spritesheets
@@ -100,6 +105,7 @@ export default class MainScene extends Phaser.Scene {
 
     this.loadObjectCollisionLayer(map, "collision");
     this.loadObjectCollisionLayer(map, "furniture-collision");
+    this.playerGroup = this.physics.add.group();
 
     this.physics.world.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
     this.cameras.main.setBounds(0, 0, map.widthInPixels, map.heightInPixels);
@@ -134,6 +140,7 @@ export default class MainScene extends Phaser.Scene {
       user.name,
       true
     );
+    this.playerGroup.add(this.localPlayer);
     this.physics.add.collider(this.localPlayer, this.collisionGroup);
     this.cameras.main.startFollow(this.localPlayer, true, 0.1, 0.1);
   }
@@ -149,29 +156,28 @@ export default class MainScene extends Phaser.Scene {
       user.name,
       false
     );
-
+    this.playerGroup.add(p);
     this.remotePlayers.set(user.userId, p);
   }
 
-moveRemotePlayer(userId: string, x: number, y: number) {
-  const p = this.remotePlayers.get(userId);
-  if (!p) return;
+  moveRemotePlayer(userId: string, x: number, y: number) {
+    const p = this.remotePlayers.get(userId);
+    if (!p) return;
 
-  // 🔥 KILL previous tweens
-  this.tweens.killTweensOf(p);
+    // 🔥 KILL previous tweens
+    this.tweens.killTweensOf(p);
 
-  p.playRemoteMove(x, y);
+    p.playRemoteMove(x, y);
 
-  this.tweens.add({
-    targets: p,
-    x,
-    y,
-    duration: 100, // slightly higher for smoothness
-    ease: "Linear",
-    onComplete: () => p.stopRemote(),
-  });
-}
-
+    this.tweens.add({
+      targets: p,
+      x,
+      y,
+      duration: 100, // slightly higher for smoothness
+      ease: "Linear",
+      onComplete: () => p.stopRemote(),
+    });
+  }
 
   removeRemotePlayer(userId: string) {
     this.remotePlayers.get(userId)?.destroy();
@@ -192,22 +198,36 @@ moveRemotePlayer(userId: string, x: number, y: number) {
     });
   }
 
-  remoteSit(userId: string, chairId: number, facing: string) {
-    const player = this.remotePlayers.get(userId);
+  remoteSit(userId: string, chairId: number) {
+    const player = this.isLocalUser(userId)
+      ? this.localPlayer
+      : this.remotePlayers.get(userId);
+
     if (!player) return;
 
-    const chair = this.chairZones.find(c => c.id === chairId);
-    if (!chair) return;
+    const chair = this.chairZones.find(obj =>
+      obj.properties?.some((p: any) =>
+        p.name === "chairId" &&
+        Number(parseTiledValue(p.value)) === chairId
+      )
+    );
+
+    if (!chair) {
+      console.warn("Chair not found for chairId:", chairId);
+      return;
+    }
 
     player.sit(chair);
   }
 
-  remoteStand(userId: string) {
-    const player = this.remotePlayers.get(userId);
-    if (!player) return;
+  remoteStand(userId: any) {
+    const player = this.isLocalUser(userId)
+      ? this.localPlayer
+      : this.remotePlayers.get(userId);
 
-    player.standUp();
+    player?.standUp();
   }
+
 
   // 🔥 IMPORTANT FIX: animations PER avatar
   private createAvatarAnimations() {

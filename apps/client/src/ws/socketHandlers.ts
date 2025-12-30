@@ -28,7 +28,7 @@ function process(scene: any, message: ServerMessage) {
 
     case "ROOM_STATE":
       message.payload.forEach((u: any) => {
-        const player = scene.isLocalUser(u.userId)
+         scene.isLocalUser(u.userId)
           ? scene.spawnLocalPlayer(u)
           : scene.addRemotePlayer(u);
 
@@ -60,6 +60,7 @@ function process(scene: any, message: ServerMessage) {
       break;
 
     case "USER_SIT":
+      console.log("Im Siiting ")
       scene.remoteSit(
         message.payload.userId,
         message.payload.chairId,
@@ -73,6 +74,10 @@ function process(scene: any, message: ServerMessage) {
 
     case "USER_LEFT":
       scene.removeRemotePlayer(message.payload.userId);
+      break;
+
+    case "SIT_REJECTED":
+      console.warn("Chair already occupied:", message.payload.chairId);
       break;
   }
 }
