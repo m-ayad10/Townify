@@ -2,7 +2,6 @@ import { DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import type { AvatarI } from "@repo/types";
 import AvatarForm from "./AvatarForm";
 
-
 interface AvatarFormData {
   name: string;
   idleImage: File | null | string;
@@ -40,6 +39,5 @@ function EditAvatarModal({
     </>
   );
 }
-
 
 export default EditAvatarModal;

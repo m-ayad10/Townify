@@ -37,5 +37,73 @@ export async function cacheWrap<T>(
   return fresh;
 }
 
+export async function deleteAllUsersCache() {
+  let cursor = 0;
+
+  do {
+    const [nextCursor, keys] = await redis.scan(cursor, {
+      match: 'users:*',
+      count: 100
+    });
+
+    cursor = Number(nextCursor);
+
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+  } while (cursor !== 0);
+}
+
+export async function deleteMapCache() {
+  let cursor = 0;
+
+  do {
+    const [nextCursor, keys] = await redis.scan(cursor, {
+      match: 'maps:*',
+      count: 100
+    });
+
+    cursor = Number(nextCursor);
+
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+  } while (cursor !== 0);
+}
+
+export async function deleteSpaceCache() {
+  let cursor = 0;
+
+  do {
+    const [nextCursor, keys] = await redis.scan(cursor, {
+      match: 'spaces:*',
+      count: 100
+    });
+
+    cursor = Number(nextCursor);
+
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+  } while (cursor !== 0);
+}
+
+export async function deleteAvatarCache() {
+  let cursor = 0;
+
+  do {
+    const [nextCursor, keys] = await redis.scan(cursor, {
+      match: 'avatars:*',
+      count: 100
+    });
+
+    cursor = Number(nextCursor);
+
+    if (keys.length > 0) {
+      await redis.del(...keys);
+    }
+  } while (cursor !== 0);
+}
+
 export { redis }
 export * from "./chat.redis.js";

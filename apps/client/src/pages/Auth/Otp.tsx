@@ -83,7 +83,7 @@ export function OTP() {
                 toast.success("LoggedIn Successful!.", {
                     action: {
                         label: "Home",
-                        onClick: () =>{ response.data.role=='admin'?navigate("/admin"): navigate(redirectUrl)},
+                        onClick: () => { response.data.role == 'admin' ? navigate("/admin") : navigate(redirectUrl) },
                     },
                 });
                 setTimeout(() => {
@@ -91,7 +91,7 @@ export function OTP() {
                     navigate(redirectUrl);
                 }, 2000);
             }
-        } catch (error : any) {
+        } catch (error: any) {
             setLoading(false);
             toast.error(error?.response?.data?.message || error.message || "Invalid OTP or Expired")
             console.log(error)
@@ -113,7 +113,7 @@ export function OTP() {
             }
         } catch (error: any) {
             console.log(error);
-            toast.error(error?.response?.data?.message || error.message )
+            toast.error(error?.response?.data?.message || error.message)
             toast.error("Something went wrong");
         }
     };

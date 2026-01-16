@@ -1,6 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { Loader2 } from "lucide-react";
 import type { MapSchemaI } from "@repo/types";
 import { useState } from "react";
 
@@ -9,9 +10,11 @@ interface MapCardProps {
   map: MapSchemaI;
   onDelete: () => void;
   onEdit: () => void;
+  isDeleting?: boolean;
+  isEditing?: boolean;
 }
 
-function MapCard({ map, onDelete, onEdit }: MapCardProps) {
+function MapCard({ map, onDelete, onEdit, isDeleting = false, isEditing = false }: MapCardProps) {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -21,7 +24,7 @@ function MapCard({ map, onDelete, onEdit }: MapCardProps) {
       onMouseLeave={() => setIsHovered(false)}
     >
       {/* Image Container */}
-      <div className="aspect-video overflow-hidden bg-gray-100 relative">
+      <div className={`aspect-video overflow-hidden bg-gray-100 relative ${isDeleting || isEditing ? 'opacity-75' : ''}`}>
         <img
           src={map.thumbnail}
           alt={map.name}
@@ -34,11 +37,11 @@ function MapCard({ map, onDelete, onEdit }: MapCardProps) {
 
       {/* Card Content */}
       <CardContent className="p-4">
-        <h3 className="font-semibold text-gray-900 truncate mb-2">
+        <h3 className={`font-semibold text-gray-900 truncate mb-2 ${isDeleting || isEditing ? 'opacity-75' : ''}`}>
           {map.name}
         </h3>
         {map.configJson && (
-          <p className="text-xs text-gray-500 mb-3 truncate">
+          <p className={`text-xs text-gray-500 mb-3 truncate ${isDeleting || isEditing ? 'opacity-75' : ''}`}>
             {map.name + ".json"}
           </p>
         )}
@@ -52,8 +55,16 @@ function MapCard({ map, onDelete, onEdit }: MapCardProps) {
                 size="sm"
                 className="flex-1 border-gray-300 hover:bg-gray-50"
                 onClick={onEdit}
+                disabled={isDeleting || isEditing}
               >
-                Edit
+                {isEditing ? (
+                  <>
+                    <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                    Editing...
+                  </>
+                ) : (
+                  "Edit"
+                )}
               </Button>
             </DialogTrigger>
           </Dialog>
@@ -62,8 +73,16 @@ function MapCard({ map, onDelete, onEdit }: MapCardProps) {
             size="sm"
             className="flex-1"
             onClick={onDelete}
+            disabled={isDeleting || isEditing}
           >
-            Delete
+            {isDeleting ? (
+              <>
+                <Loader2 className="h-3 w-3 mr-1 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              "Delete"
+            )}
           </Button>
         </div>
       </CardContent>

@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useSelector } from "react-redux";
 import type { RootState } from "@/Redux/stroe";
@@ -14,13 +14,14 @@ import ChatContainer from "@/components/Space-Chat/ChatContainer";
 import GameControls from "@/components/Space-Chat/GameControls";
 import { useLiveKit } from "@/contexts/LiveKitContext";
 
-import VideoComponent from "@/components/LiveKit/VideoComponent";
-import AudioComponent from "@/components/LiveKit/AudioComponent";
-import { Badge } from "lucide-react";
-import { Card, CardContent } from "@/components/ui/card";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { LocalVideoTrack, RemoteVideoTrack, LocalAudioTrack, RemoteAudioTrack } from "livekit-client";
+
+import ExpandedFocusView from "@/components/LiveKit/ExpandedFocus";
+import CollapsedVideoGrid from "@/components/LiveKit/CollapsedVideoGrid";
+import ExpandedVideoGrid from "@/components/LiveKit/ExpandedVideoGrid";
 
 type SpaceState = "loading" | "allowed" | "blocked" | "not-found";
+type VideoViewMode = "collapsed" | "expanded-grid" | "expanded-focus";
 
 export default function Space() {
   const { slug } = useParams();
@@ -34,9 +35,16 @@ export default function Space() {
   const [spaceId, setSpaceId] = useState<string | null>(null);
   const [isChatOpen, setIsChatOpen] = useState(false);
 
-  const nearbyUserIds = useSelector((state: RootState) => state.visibility.nearbyUserIds);
-  const selfSpaceId = useSelector((state: RootState) => state.visibility.selfSpaceId);
+  // Video overlay state
+  const [videoViewMode, setVideoViewMode] = useState<VideoViewMode>("collapsed");
+  const [focusedParticipantId, setFocusedParticipantId] = useState<string>("local");
 
+  const nearbyUserIds = useSelector((state: RootState) => state.visibility.nearbyUserIds);
+  const spaceUserIds = useSelector((state: RootState) => state.visibility.spaceUserIds);
+  const selfSpaceId = useSelector((state: RootState) => state.visibility.selfSpaceId);
+  const isFetched = useRef(false)
+
+  const liveKit = useLiveKit();
   const {
     connect,
     disconnect,
@@ -46,7 +54,7 @@ export default function Space() {
     currentRoomName,
     setCurrentRoomName,
     setIsConnected
-  } = useLiveKit();
+  } = liveKit;
 
   useSocket(
     state === "allowed" ? spaceId ?? undefined : undefined,
@@ -71,10 +79,11 @@ export default function Space() {
     };
   }, [spaceId, user?.id, user?.name, user?.avatarId]);
 
-
   useEffect(() => {
     if (!slug || !user) return;
-
+    if (isFetched.current) {
+      return
+    }
     const loadSpace = async () => {
       try {
         setState("loading");
@@ -87,7 +96,7 @@ export default function Space() {
         setMapUrl(spaceRes.data.space.map.configJson);
         setSpaceId(spaceId);
         setState("allowed");
-
+        isFetched.current = true
       } catch (err: any) {
         const msg = err?.response?.data?.message;
 
@@ -107,13 +116,15 @@ export default function Space() {
     };
   }, [slug, user?.id, navigate]);
 
-
   useEffect(() => {
     if (!user) navigate(`/lobby/${slug}`);
   }, [user, slug, navigate]);
 
+  useEffect(() => {
+    isFetched.current = false
+  }, [slug])
 
-  // Handle LiveKit room switching (Global vs Space)
+  // Handle LiveKit room switching
   useEffect(() => {
     if (state !== "allowed" || !slug) return;
 
@@ -125,7 +136,6 @@ export default function Space() {
       try {
         await connect(targetRoom);
         setCurrentRoomName(targetRoom);
-        console.log("[LiveKit] Switching to room:", targetRoom);
       } catch (err) {
         console.error("[LiveKit] Switching failed:", err);
       }
@@ -133,24 +143,136 @@ export default function Space() {
 
     handleConnect();
   }, [slug, selfSpaceId, state, currentRoomName]);
-  // Removed nearbyUserIds from dependency: we don't reconnect on proximity, only on space change.
 
   // Compute Visible Participants
   const visibleParticipants = useMemo(() => {
+    console.log("selfSpaceId", selfSpaceId);
+    console.log("participants", participants);
+    console.log("nearbyUserIds", nearbyUserIds);
+    console.log("spaceUserIds", spaceUserIds);
     if (selfSpaceId) {
-      return participants;
+      return participants.filter(p => spaceUserIds.includes(p.identity) && p.identity !== user?.id);
     } else {
       return participants.filter(p => nearbyUserIds.includes(p.identity));
     }
   }, [participants, selfSpaceId, nearbyUserIds]);
 
-  const gridCols = useMemo(() => {
-    const totalParticipants = visibleParticipants.length + 1; // +1 for local user
-    if (totalParticipants <= 2) return "grid-cols-1";
-    if (totalParticipants <= 4) return "grid-cols-2";
-    if (totalParticipants <= 6) return "grid-cols-3";
-    return "grid-cols-4";
-  }, [visibleParticipants]);
+
+
+  // Handle keyboard shortcuts (Escape key)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        if (videoViewMode === "expanded-focus") {
+          // First press: Exit focus mode
+          setVideoViewMode("expanded-grid");
+          e.preventDefault();
+        } else if (videoViewMode === "expanded-grid") {
+          // Second press: Exit expanded mode
+          setVideoViewMode("collapsed");
+          e.preventDefault();
+        }
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [videoViewMode]);
+
+  // Get participant data
+  interface ParticipantData {
+    id: string;
+    name: string;
+    videoTrack?: LocalVideoTrack | RemoteVideoTrack;
+    audioTrack?: LocalAudioTrack | RemoteAudioTrack;
+    isLocal: boolean;
+  }
+
+  const getParticipantData = useCallback((participantId: string): ParticipantData | null => {
+    if (participantId === "local") {
+      return {
+        id: "local",
+        name: user?.name || "You",
+        videoTrack: localVideoTrack || undefined,
+        audioTrack: localAudioTrack || undefined,
+        isLocal: true
+      };
+    }
+
+    const participant = visibleParticipants.find(p => p.sid === participantId);
+    if (!participant) return null;
+
+    const videoPub = Array.from(participant.videoTrackPublications.values())[0];
+    const audioPub = Array.from(participant.audioTrackPublications.values())[0];
+
+    return {
+      id: participant.sid,
+      name: participant.name || participant.identity,
+      videoTrack: videoPub?.track as LocalVideoTrack | RemoteVideoTrack,
+      audioTrack: audioPub?.track as LocalAudioTrack | RemoteAudioTrack,
+      isLocal: false
+    };
+  }, [user, localVideoTrack, localAudioTrack, visibleParticipants]);
+
+  const focusedParticipant = getParticipantData(focusedParticipantId);
+
+  // Get all participants data (local first, then remote)
+  const allParticipants = useMemo(() => {
+    // Only include local video when there are visible participants
+    if (visibleParticipants.length === 0) {
+      return visibleParticipants.map(p => {
+        const videoPub = Array.from(p.videoTrackPublications.values())[0];
+        const audioPub = Array.from(p.audioTrackPublications.values())[0];
+        return {
+          id: p.sid,
+          name: p.name || p.identity,
+          videoTrack: videoPub?.track,
+          audioTrack: audioPub?.track,
+          isLocal: false
+        };
+      });
+    }
+
+    // Include local video at the beginning when others are present
+    return [
+      {
+        id: "local",
+        name: user?.name || "You",
+        videoTrack: localVideoTrack || undefined,
+        audioTrack: localAudioTrack || undefined,
+        isLocal: true
+      },
+      ...visibleParticipants.map(p => {
+        const videoPub = Array.from(p.videoTrackPublications.values())[0];
+        const audioPub = Array.from(p.audioTrackPublications.values())[0];
+        return {
+          id: p.sid,
+          name: p.name || p.identity,
+          videoTrack: videoPub?.track,
+          audioTrack: audioPub?.track,
+          isLocal: false
+        };
+      })
+    ];
+  }, [user, localVideoTrack, localAudioTrack, visibleParticipants]);
+
+  // Handle mode transitions
+  const handleEnterExpandedGrid = () => {
+    setVideoViewMode("expanded-grid");
+  };
+
+  const handleToggleFocus = (participantId: string) => {
+    setFocusedParticipantId(participantId);
+    setVideoViewMode("expanded-focus");
+  };
+
+  const handleExitFocus = () => {
+    setVideoViewMode("expanded-grid");
+  };
+
+  const handleExitExpanded = () => {
+    setVideoViewMode("collapsed");
+  };
 
   if (state !== "allowed") {
     return (
@@ -165,6 +287,11 @@ export default function Space() {
 
   if (!mapUrl || !spaceId || !user || !localPlayer) return null;
 
+
+  const shouldShowVideoOverlay = visibleParticipants.length > 0;
+
+
+
   return (
     <div className="w-screen h-screen relative overflow-hidden bg-[#0f172a]">
       <Game
@@ -173,118 +300,39 @@ export default function Space() {
         localPlayer={localPlayer}
       />
 
-      {/* Video Overlay Layer */}
-      {/* Modern Video Overlay Layer */}
-      {(visibleParticipants.length > 0 || selfSpaceId) && (
-        <div className="absolute top-6 left-6 z-40 pointer-events-none">
-          <div className={`flex justify-center gap-4 pointer-events-auto max-w-[90vw]`}>
-            {/* Local User Card */}
-            <TooltipProvider >
-              <Card className="w-55 bg-gray-900/90 backdrop-blur-sm border-gray-700 overflow-hidden shadow-2xl transition-all hover:scale-[1.02]">
-                <CardContent className="p-0 relative">
-                  <div className="relative aspect-video">
-                    <VideoComponent
-                      track={localVideoTrack ?? undefined}
-                      participantIdentity={user?.name}
-                      local
-                    />
-                  </div>
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="font-medium text-white truncate">
-                          {user?.name}
-                        </span>
-                        <Badge className="text-xs">
-                          You
-                        </Badge>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {localVideoTrack && (
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Video on</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                        {localAudioTrack && (
-                          <Tooltip>
-                            <TooltipTrigger>
-                              <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                              <p>Audio on</p>
-                            </TooltipContent>
-                          </Tooltip>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+      {/* Modern Video Overlay System */}
+      {(shouldShowVideoOverlay || selfSpaceId) && (
+        <>
+          {/* Collapsed Mode */}
+          {videoViewMode === "collapsed" && (
+            <CollapsedVideoGrid
+              participants={allParticipants}
+              onEnterExpandedGrid={handleEnterExpandedGrid}
+            />
+          )}
 
-              {/* Remote Participants */}
-              {visibleParticipants.map((participant) => {
-                const videoPub = Array.from(participant.videoTrackPublications.values())[0];
-                const audioPub = Array.from(participant.audioTrackPublications.values())[0];
+          {/* Expanded Grid Mode */}
+          {videoViewMode === "expanded-grid" && (
+            <ExpandedVideoGrid
+              participants={allParticipants}
+              onToggleFocus={handleToggleFocus}
+              onExitExpanded={handleExitExpanded}
+            />
+          )}
 
-                const videoTrack = videoPub?.track as any;
-                const audioTrack = audioPub?.track as any;
-
-                return (
-                  <Card
-                    key={participant.sid}
-                    className="w-64 bg-gray-900/90 backdrop-blur-sm border-gray-700 overflow-hidden shadow-2xl transition-all hover:scale-[1.02]"
-                  >
-                    <CardContent className="p-0 relative">
-                      <div className="relative aspect-video">
-                        <VideoComponent
-                          track={videoTrack}
-                          participantIdentity={participant.name || participant.identity}
-                        />
-                        {audioTrack && <AudioComponent track={audioTrack} />}
-                      </div>
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-3">
-                        <div className="flex items-center justify-between">
-                          <span className="font-medium text-white truncate">
-                            {participant.name || participant.identity}
-                          </span>
-                          <div className="flex items-center gap-1">
-                            {videoTrack && (
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Video on</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
-                            {audioTrack && (
-                              <Tooltip>
-                                <TooltipTrigger>
-                                  <div className="w-2 h-2 rounded-full bg-green-500"></div>
-                                </TooltipTrigger>
-                                <TooltipContent>
-                                  <p>Audio on</p>
-                                </TooltipContent>
-                              </Tooltip>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                );
-              })}
-            </TooltipProvider>
-          </div>
-        </div>
+          {/* Expanded Focus Mode */}
+          {videoViewMode === "expanded-focus" && focusedParticipant && (
+            <ExpandedFocusView
+              participants={allParticipants}
+              focusedParticipant={focusedParticipant}
+              focusedParticipantId={focusedParticipantId}
+              onToggleFocus={handleToggleFocus}
+              onExitFocus={handleExitFocus}
+              onExitExpanded={handleExitExpanded}
+            />
+          )}
+        </>
       )}
-
 
       <ChatContainer
         isOpen={isChatOpen}
@@ -301,4 +349,6 @@ export default function Space() {
     </div>
   );
 }
+
+
 

@@ -1,10 +1,10 @@
-import { cacheDel } from "@repo/cache/dist/index.js";
+import { cacheDel, cacheWrap } from "@repo/cache/dist/index.js";
 import { uploadToCloudinary } from "../../shared/services/cloudinary.service.js";
 import { getUserById, updateUser } from "./users.repository.js";
 import fs from 'fs'
 
 export const getUserService = async (userId: string) => {
-    const user = await getUserById(userId);
+    const user = await cacheWrap(`users:me:${userId}`, 43200, async () => getUserById(userId));
     if (!user) throw new Error("USER_NOT_FOUND");
     return user;
 };
@@ -38,11 +38,12 @@ export const updateUserProfileService = async ({
         const { success, result } = await uploadToCloudinary(file.path, {
             folder: "townify/users",
         });
-        if(fs.existsSync(file.path)) fs.unlinkSync(file.path)
+        if (fs.existsSync(file.path)) fs.unlinkSync(file.path)
         if (!success) throw new Error("UPLOAD_FAILED");
 
         data.profile = result?.secure_url;
     }
     await cacheDel("users:list")
+    await cacheDel(`users:me:${userId}`)
     return updateUser(userId, data);
 };

@@ -7,7 +7,7 @@ import { OTP } from "./pages/Auth/Otp";
 import { GoogleOAuthProvider } from "@react-oauth/google";
 import { useDispatch, useSelector } from "react-redux";
 import { type AppDispatch, type RootState } from "./Redux/stroe";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { fetchUser } from "./Redux/Slice/Auth/AuthThunk";
 import Dashboard from "./pages/Dashboard";
 import InviteMembers from "./pages/InviteMembers";
@@ -32,18 +32,25 @@ import DashBoardChat from "./components/Space-Chat/DashBoardChat";
 function App() {
   const dispatch = useDispatch<AppDispatch>();
   const auth = useSelector((state: RootState) => state.user);
+  const userFetched = useRef(false)
+  const isFetched = useRef(false)
+
   useEffect(() => {
+    if (userFetched.current) return;
     dispatch(fetchUser());
+    userFetched.current = true;
   }, []);
 
   useEffect(() => {
     if (auth.status != "succeeded") return;
+    if (isFetched.current) return;
     dispatch(fetchUserSpacesThunk());
     dispatch(fetchAllAvatar());
     dispatch(fetchAllMaps());
     if (auth?.user?.role == "admin" && auth.status == "succeeded") {
       dispatch(fetchAdminDashboard());
     }
+    isFetched.current = true;
   }, [auth.status]);
 
   const AdminSideBar = () => {

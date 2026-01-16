@@ -1,5 +1,4 @@
-// No leading Markdown code fence found to remove.
-import {  useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Plus } from "lucide-react";
@@ -31,16 +30,21 @@ function AvatarPage() {
   const avatar = useSelector((state: RootState) => state.avatars);
   const user = useSelector((state: RootState) => state.user);
   const dispatch = useDispatch<AppDispatch>();
-  const [isPending,startTransition]=useTransition()
-  const [filteredAvatars , setFilteredAvatars] = useState<AvatarI[]>([]);
-  const [open,setOpen]=useState(false)
+  const [isPending, startTransition] = useTransition();
+  const [filteredAvatars, setFilteredAvatars] = useState<AvatarI[]>([]);
+  const [open, setOpen] = useState(false);
+
+  // Track loading states per avatar ID
+  const [deletingStates, setDeletingStates] = useState<Record<string, boolean>>({});
+  const [editingStates, setEditingStates] = useState<Record<string, boolean>>({});
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    startTransition(()=>{
+    startTransition(() => {
       setSearchQuery(value);
-    })
-  }
+    });
+  };
+
   useEffect(() => {
     const list = avatar?.avatars ?? [];
     const q = searchQuery.trim().toLowerCase();
@@ -56,51 +60,71 @@ function AvatarPage() {
   }, [avatar.avatars, searchQuery]);
 
   const [isCreating, setIsCreating] = useState(false);
-  const [isEditing, setIsEditing] = useState<string | null>(null);
   const [editingAvatar, setEditingAvatar] = useState<AvatarI | null>(null);
 
   const handleDelete = async (id: string) => {
-    console.log("Deleting avatar:", id);
-    await dispatch(deleteAvatar(id));
+    // Set deleting state for this specific avatar
+    setDeletingStates(prev => ({ ...prev, [id]: true }));
+
+    try {
+      console.log("Deleting avatar:", id);
+      await dispatch(deleteAvatar(id));
+    } finally {
+      // Clear deleting state for this avatar
+      setDeletingStates(prev => {
+        const newState = { ...prev };
+        delete newState[id];
+        return newState;
+      });
+    }
   };
 
   const handleCreateAvatar = async (data: AvatarFormData) => {
     try {
-       console.log("Creating avatar:", data);
-    setIsCreating(true);
-    const fomData = new FormData();
-    fomData.append("name", data.name);  
-    if (data.idleImage instanceof File) {
-      fomData.append("idle", data.idleImage);
-    }
-    if (data.walkSheet instanceof File) {
-      fomData.append("walkSheet", data.walkSheet);
-    }
-    await dispatch(uploadAvatar(fomData)).unwrap()
-    setOpen(false);
+      console.log("Creating avatar:", data);
+      setIsCreating(true);
+      const formData = new FormData();
+      formData.append("name", data.name);
+      if (data.idleImage instanceof File) {
+        formData.append("idle", data.idleImage);
+      }
+      if (data.walkSheet instanceof File) {
+        formData.append("walkSheet", data.walkSheet);
+      }
+      await dispatch(uploadAvatar(formData)).unwrap();
+      setOpen(false);
     } catch (error: any) {
       console.error("Error creating avatar:", error);
-    }
-    finally{
+    } finally {
       setIsCreating(false);
     }
   };
 
   const handleUpdateAvatar = async (data: AvatarFormData) => {
     if (!editingAvatar) return;
-    setIsEditing(editingAvatar.id);
 
-    const fomData = new FormData();
-    fomData.append("name", data.name);  
-    if (data.idleImage instanceof File) {
-      fomData.append("idle", data.idleImage);
+    // Set editing state for this specific avatar
+    setEditingStates(prev => ({ ...prev, [editingAvatar.id]: true }));
+
+    try {
+      const formData = new FormData();
+      formData.append("name", data.name);
+      if (data.idleImage instanceof File) {
+        formData.append("idle", data.idleImage);
+      }
+      if (data.walkSheet instanceof File) {
+        formData.append("walkSheet", data.walkSheet);
+      }
+      await dispatch(updateAvatar({ id: editingAvatar.id, data: formData }));
+      setEditingAvatar(null);
+    } finally {
+      // Clear editing state for this avatar
+      setEditingStates(prev => {
+        const newState = { ...prev };
+        delete newState[editingAvatar.id];
+        return newState;
+      });
     }
-    if (data.walkSheet instanceof File) {
-      fomData.append("walkSheet", data.walkSheet);
-    }
-    await dispatch(updateAvatar({id: editingAvatar.id,data: fomData}));
-    setEditingAvatar(null);
-    setIsEditing(null);
   };
 
   const openEditModal = (avatar: AvatarI) => {
@@ -131,7 +155,7 @@ function AvatarPage() {
 
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
-            <Button onClick={()=>setOpen(true)} className="bg-indigo-600 hover:bg-indigo-700">
+            <Button onClick={() => setOpen(true)} className="bg-indigo-600 hover:bg-indigo-700">
               <Plus className="h-4 w-4 mr-2" />
               Create Avatar
             </Button>
@@ -142,7 +166,8 @@ function AvatarPage() {
           />
         </Dialog>
       </div>
-      {avatar.status === "loading" || user.status === "loading"||isPending ? (
+
+      {avatar.status === "loading" || user.status === "loading" || isPending ? (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 md:gap-4">
           {Array.from({ length: 5 }).map((_, index) => (
             <ShimmerCard key={`shimmer-${index}`} />
@@ -156,6 +181,8 @@ function AvatarPage() {
               avatar={avatar}
               onDelete={() => handleDelete(avatar?.id)}
               onEdit={() => openEditModal(avatar)}
+              isDeleting={deletingStates[avatar.id] || false}
+              isEditing={editingStates[avatar.id] || false}
             />
           ))}
         </div>
@@ -172,7 +199,7 @@ function AvatarPage() {
             <EditAvatarModal
               avatar={editingAvatar}
               onUpdate={handleUpdateAvatar}
-              isSubmitting={isEditing === editingAvatar.id}
+              isSubmitting={editingStates[editingAvatar.id] || false}
             />
           </DialogContent>
         </Dialog>

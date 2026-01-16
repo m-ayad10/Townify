@@ -6,7 +6,7 @@ export const createSpaceRepo = (data: {
   creatorId: string;
   mapId?: string;
 }) => {
-  return prisma.space.create({ data,include: { map: true }  });
+  return prisma.space.create({ data, include: { map: true } });
 };
 
 export const findSpaceById = (id: string) => {
@@ -52,7 +52,7 @@ export const getSpacesByUser = (userId: string) => {
 export const addMember = (spaceId: string, userId: string) => {
   return prisma.spaceMembers.create({
     data: { spaceId, userId },
-    include:{
+    include: {
       user: {
         select: { id: true, name: true, email: true, profile: true },
       }
@@ -82,7 +82,7 @@ export const toogleMember = (id: string, status: MemberStatus) => {
   return prisma.spaceMembers.update({
     where: { id },
     data: { status },
-    include:{
+    include: {
       user: {
         select: { id: true, name: true, email: true, profile: true },
       }
@@ -99,13 +99,13 @@ export const findSpaceBySlug = (slug: string) => {
   });
 };
 
-export const  getSpaceManageDetailsRepo=(slug:string)=>{
+export const getSpaceManageDetailsRepo = (slug: string) => {
   return prisma.space.findUnique({
     where: { slug },
     include: {
       map: true,
       members: {
-        include: {  
+        include: {
           user: {
             select: { id: true, name: true, email: true, profile: true },
           },
@@ -211,7 +211,7 @@ export const createLinkInvite = (spaceId: string, email: string, userId: string)
   });
 };
 
-export const findInviteById =(inviteId:string)=>{
+export const findInviteById = (inviteId: string) => {
   return prisma.spaceInvite.findUnique({
     where: { id: inviteId },
   });
@@ -225,7 +225,7 @@ export const findInvitesBySpaceId = (spaceId: string) => {
 
 export const deleteInviteById = (inviteId: string, spaceId: string) => {
   return prisma.spaceInvite.delete({
-    where: { id: inviteId ,spaceId},
+    where: { id: inviteId, spaceId },
   });
 }
 export const removeMemberByEmailAndSpaceId = (spaceId: string, email: string) => {
@@ -244,10 +244,10 @@ export const findMembersBySpaceId = (spaceId: string) => {
     where: { spaceId },
     include: {
       user: {
-        select: { 
+        select: {
           id: true,
           name: true,
-          email: true,  
+          email: true,
           profile: true,
         },
       },
@@ -258,7 +258,7 @@ export const findMembersBySpaceId = (spaceId: string) => {
 
 export const bulkApproveInvitesByIds = (spaceId: string, inviteIds: string[]) => {
   return prisma.spaceInvite.updateMany({
-    where: { id: { in: inviteIds },spaceId },
+    where: { id: { in: inviteIds }, spaceId },
     data: { status: "approved" },
   });
 }
@@ -266,7 +266,7 @@ export const bulkApproveInvitesByIds = (spaceId: string, inviteIds: string[]) =>
 export const getUserIdsFromInvites = (spaceId: string, inviteIds: string[]) => {
   return prisma.spaceInvite.findMany({
     where: {
-      id: { in: inviteIds }, 
+      id: { in: inviteIds },
       spaceId
     },
     select: {
@@ -277,8 +277,8 @@ export const getUserIdsFromInvites = (spaceId: string, inviteIds: string[]) => {
 }
 
 export const bulkAddMembers = (spaceId: string, userIds: string[]) => {
-  const membersData:SpaceMembersCreateManyInput[]  = userIds.map((userId) => ({
-    spaceId,  
+  const membersData: SpaceMembersCreateManyInput[] = userIds.map((userId) => ({
+    spaceId,
     userId,
     status: "active",
   }));
@@ -286,7 +286,7 @@ export const bulkAddMembers = (spaceId: string, userIds: string[]) => {
   return prisma.spaceMembers.createManyAndReturn({
     data: membersData,
     skipDuplicates: true,
-    include:{
+    include: {
       user: {
         select: { id: true, name: true, email: true, profile: true },
       }
@@ -296,24 +296,41 @@ export const bulkAddMembers = (spaceId: string, userIds: string[]) => {
 
 export const bulkDeleteInvitesByIds = (spaceId: string, inviteIds: string[]) => {
   return prisma.spaceInvite.deleteMany({
-    where: { id: { in: inviteIds } ,spaceId},
+    where: { id: { in: inviteIds }, spaceId },
   });
 }
 
 export const getApprovedInvitesByIds = (spaceId: string, inviteIds: string[]) => {
   return prisma.spaceInvite.findMany({
-   where: { spaceId,status:'approved', id: { in: inviteIds } },
+    where: { spaceId, status: 'approved', id: { in: inviteIds } },
     select: { email: true }
   });
 }
 
-export const bulkRemoveMembersByIds = (spaceId: string, inviteIds: string[],emailList: string[]) => {
+export const bulkRemoveMembersByIds = (spaceId: string, inviteIds: string[], emailList: string[]) => {
   return prisma.spaceMembers.deleteMany({
-    where: {  
+    where: {
       spaceId,
       user: {
         email: { in: emailList },
       },
     },
   });
-} 
+}
+
+export const findCreatorsByMapId = async (mapId: string) => {
+  const spaces = await prisma.space.findMany({
+    where: { mapId },
+    select: { creatorId: true },
+    distinct: ['creatorId']
+  });
+  return spaces.map(s => s.creatorId);
+};
+
+export const findSlugsByMapId = async (mapId: string) => {
+  const spaces = await prisma.space.findMany({
+    where: { mapId },
+    select: { slug: true }
+  });
+  return spaces.map(s => s.slug);
+}; 

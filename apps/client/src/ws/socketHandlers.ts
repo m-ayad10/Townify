@@ -9,7 +9,8 @@ import {
   removeNearbyUser,
   addSpaceUser,
   removeSpaceUser,
-  setSelfSpaceId
+  setSelfSpaceId,
+  removeAllSpaceUser
 } from "@/Redux/Slice/Visibility/visibilitySlice";
 
 
@@ -55,7 +56,6 @@ function process(scene: any, message: ServerMessage) {
     case "USER_NEARBY_ENTER":
       const enterId = (message.payload as any).targetUserId || (message.payload as any).userId;
       if (enterId) store.dispatch(addNearbyUser(enterId));
-
       break;
 
     case "USER_NEARBY_LEAVE":
@@ -73,7 +73,8 @@ function process(scene: any, message: ServerMessage) {
       if (joinUserId === currentUserId) {
         store.dispatch(setSelfSpaceId(joinSpaceId));
       }
-      if (joinUserId) store.dispatch(addSpaceUser(joinUserId));
+
+      if (joinUserId && joinUserId !== currentUserId) store.dispatch(addSpaceUser(joinUserId));
       break;
 
     }
@@ -82,6 +83,7 @@ function process(scene: any, message: ServerMessage) {
       const myId = store.getState().user.user?.id;
 
       if (leftUserId === myId) {
+        store.dispatch(removeAllSpaceUser());
         store.dispatch(setSelfSpaceId(null));
       }
       if (leftUserId) store.dispatch(removeSpaceUser(leftUserId));
