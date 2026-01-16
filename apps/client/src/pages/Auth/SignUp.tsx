@@ -27,7 +27,7 @@ import type { AppDispatch } from "@/Redux/stroe"
 
 export function SignUp() {
   const navigate = useNavigate()
-  const dispatch=useDispatch<AppDispatch>()
+  const dispatch = useDispatch<AppDispatch>()
   const [searchParams] = useSearchParams();
   const redirectParam = searchParams.get("redirect");
 
@@ -66,18 +66,18 @@ export function SignUp() {
   const responseGoogle = async (authResult: any) => {
     try {
       if (authResult?.code) {
-        const response=await axios.get(`http://localhost:8080/auth/googleLogin?code=${authResult.code}`, {
+        const response = await axios.get(`http://localhost:8080/auth/googleLogin?code=${authResult.code}`, {
           withCredentials: true,
         })
         dispatch(addAuth(response.data.user))
-        if(response.data.user.role=='admin') navigate("/admin")
-        else if(redirectParam){
-            navigate(redirectParam)
+        if (response.data.user.role == 'admin') navigate("/admin")
+        else if (redirectParam) {
+          navigate(redirectParam)
         }
         else navigate("/")
       }
-    } catch (error:any) {
-      toast.error(error?.response?.data?.message|| error.message || "Google login failed")
+    } catch (error: any) {
+      toast.error(error?.response?.data?.message || error.message || "Google login failed")
       console.error(error)
     }
   }
@@ -178,7 +178,7 @@ export function SignUp() {
               <button
                 type="button"
                 onClick={() => {
-                  if(redirectParam){
+                  if (redirectParam) {
                     navigate(`/login?redirect=${redirectParam}`)
                   }
                   else navigate("/login")

@@ -7,6 +7,9 @@ export const getUserById = (id: string) => {
             avatar: true,
             space: true,
         },
+        omit: {
+            password: true,
+        }
     });
 };
 

@@ -28,8 +28,8 @@ import { addAuth } from "@/Redux/Slice/Auth/Auth"
 
 export function Login() {
   const navigate = useNavigate()
-  const dispatch=useDispatch<AppDispatch>()
-   const [searchParams] = useSearchParams();
+  const dispatch = useDispatch<AppDispatch>()
+  const [searchParams] = useSearchParams();
 
   const redirectParam = searchParams.get("redirect");
 
@@ -50,19 +50,19 @@ export function Login() {
 
       if (response) {
         const email = data.email
-        const otpUrl = redirectParam? `/auth/otp?redirect=${redirectParam}`: "/auth/otp";
+        const otpUrl = redirectParam ? `/auth/otp?redirect=${redirectParam}` : "/auth/otp";
         toast.success("Login successful! Sending OTP...", {
           action: {
             label: "Verify OTP",
-            onClick: () => navigate(otpUrl, { state: { email } }) ,
+            onClick: () => navigate(otpUrl, { state: { email } }),
           },
         })
 
         localStorage.setItem("otpEmail", email)
 
         setTimeout(() => {
-          navigate(otpUrl, { state: { email } })    
-        }, 1200)
+          navigate(otpUrl, { state: { email } })
+        }, 100)
       }
     } catch (error: any) {
       toast.error(error?.response?.data?.message || error.message || "Invalid credentials")
@@ -73,20 +73,20 @@ export function Login() {
   const responseGoogle = async (authResult: any) => {
     try {
       if (authResult?.code) {
-        const response=await axios.get(`http://localhost:8080/auth/googleLogin?code=${authResult.code}`, {
+        const response = await axios.get(`http://localhost:8080/auth/googleLogin?code=${authResult.code}`, {
           withCredentials: true,
         })
         console.log(response.data)
         dispatch(addAuth(response.data.user))
-        if(response.data.user.role=='admin') navigate("/admin")
-        else if(redirectParam){
-            navigate(redirectParam)
+        if (response.data.user.role == 'admin') navigate("/admin")
+        else if (redirectParam) {
+          navigate(redirectParam)
         }
         else navigate("/")
         toast.success("Logged in with Google!")
       }
     } catch (error: any) {
-      toast.error(error?.response?.data?.message || error.message|| "Google login failed")
+      toast.error(error?.response?.data?.message || error.message || "Google login failed")
       console.error(error)
     }
   }
@@ -170,11 +170,11 @@ export function Login() {
               Don't have an account?{" "}
               <button
                 type="button"
-                onClick={() =>{
-                  if(redirectParam){
+                onClick={() => {
+                  if (redirectParam) {
                     navigate(`/signup?redirect=${redirectParam}`)
                   }
-                  else{
+                  else {
                     navigate("/signup")
                   }
                 }}

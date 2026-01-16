@@ -1,4 +1,4 @@
-import {  useEffect, useState, useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -50,6 +50,8 @@ function UserManagement() {
   const [isPending, startTransition] = useTransition();
   const dispatch = useDispatch<AppDispatch>();
   const [filteredUsers, setFilteredUsers] = useState<UserI[]>([]);
+  // Track loading states per user ID
+  const [loadingStates, setLoadingStates] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (users.status !== "succeeded") return;
@@ -61,11 +63,12 @@ function UserManagement() {
     }
     const filtered = list.filter((user) => {
       const matchesSearch =
-        user.name.includes(searchQuery) || user.email.includes(searchQuery);
+        user.name.toLowerCase().includes(q) ||
+        user.email.toLowerCase().includes(q);
       const matchesStatus =
         statusFilter === "all" ||
-        (statusFilter == "active" && user.isActive) ||
-        (statusFilter == "blocked" && !user.isActive);
+        (statusFilter === "active" && user.isActive) ||
+        (statusFilter === "blocked" && !user.isActive);
       return matchesSearch && matchesStatus;
     });
     setFilteredUsers(filtered);
@@ -78,7 +81,15 @@ function UserManagement() {
   };
 
   const handleStatusToggle = async (userId: string) => {
-    await dispatch(userStatusToggle(userId));
+    // Set loading state for this specific user
+    setLoadingStates(prev => ({ ...prev, [userId]: true }));
+
+    try {
+      await dispatch(userStatusToggle(userId));
+    } finally {
+      // Clear loading state for this user
+      setLoadingStates(prev => ({ ...prev, [userId]: false }));
+    }
   };
 
   const resetFilters = () => {
@@ -201,8 +212,8 @@ function UserManagement() {
 
             <TableBody>
               {isPending ||
-              users.status === "loading" ||
-              auth.status === "loading" ? (
+                users.status === "loading" ||
+                auth.status === "loading" ? (
                 Array.from({ length: 8 }).map((_, index) => (
                   <TableRow key={index} className="animate-pulse">
                     <TableCell>
@@ -226,108 +237,120 @@ function UserManagement() {
                   </TableRow>
                 ))
               ) : filteredUsers.length > 0 ? (
-                filteredUsers.map((user) => (
-                  <TableRow
-                    key={user.id}
-                    className="hover:bg-gray-50 transition-colors border-b border-gray-100"
-                  >
-                    <TableCell>
-                      <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-100">
-                        {user.profile ? (
-                          <img
-                            src={user.profile}
-                            alt={user.name}
-                            className="w-full h-full object-cover"
-                            onError={(e) => {
-                              const target = e.target as HTMLImageElement;
-                              target.style.display = "none";
-                              const parent = target.parentElement;
-                              if (parent) {
-                                const initial =
-                                  user.name?.charAt(0)?.toUpperCase() || "?";
-                                parent.innerHTML = `<div class="w-full h-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-sm">${initial}</div>`;
-                              }
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-sm">
-                            {user.name?.charAt(0)?.toUpperCase() || "?"}
-                          </div>
-                        )}
-                      </div>
-                    </TableCell>
+                filteredUsers.map((user) => {
+                  const isLoading = loadingStates[user.id] || false;
 
-                    <TableCell className="font-medium whitespace-nowrap">
-                      {user.name}
-                    </TableCell>
+                  return (
+                    <TableRow
+                      key={user.id}
+                      className="hover:bg-gray-50 transition-colors border-b border-gray-100"
+                    >
+                      <TableCell>
+                        <div className="w-10 h-10 rounded-full overflow-hidden border-2 border-gray-100">
+                          {user.profile ? (
+                            <img
+                              src={user.profile}
+                              alt={user.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = "none";
+                                const parent = target.parentElement;
+                                if (parent) {
+                                  const initial =
+                                    user.name?.charAt(0)?.toUpperCase() || "?";
+                                  parent.innerHTML = `<div class="w-full h-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-sm">${initial}</div>`;
+                                }
+                              }}
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-r from-blue-500 to-purple-500 flex items-center justify-center text-white font-semibold text-sm">
+                              {user.name?.charAt(0)?.toUpperCase() || "?"}
+                            </div>
+                          )}
+                        </div>
+                      </TableCell>
 
-                    <TableCell className="text-gray-600 whitespace-nowrap">
-                      {user.email}
-                    </TableCell>
+                      <TableCell className="font-medium whitespace-nowrap">
+                        {user.name}
+                      </TableCell>
 
-                    <TableCell>
-                      <Badge
-                        variant={user.role === "admin" ? "default" : "outline"}
-                        className={`whitespace-nowrap ${
-                          user.role === "admin"
+                      <TableCell className="text-gray-600 whitespace-nowrap">
+                        {user.email}
+                      </TableCell>
+
+                      <TableCell>
+                        <Badge
+                          variant={user.role === "admin" ? "default" : "outline"}
+                          className={`whitespace-nowrap ${user.role === "admin"
                             ? "bg-purple-100 text-purple-800 hover:bg-purple-100 border-purple-200"
                             : "bg-gray-100 text-gray-800 hover:bg-gray-100"
-                        }`}
-                      >
-                        {user.role === "admin" ? (
-                          <Shield className="h-3 w-3 mr-1" />
-                        ) : (
-                          <User className="h-3 w-3 mr-1" />
-                        )}
-                        {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
-                      </Badge>
-                    </TableCell>
+                            }`}
+                        >
+                          {user.role === "admin" ? (
+                            <Shield className="h-3 w-3 mr-1" />
+                          ) : (
+                            <User className="h-3 w-3 mr-1" />
+                          )}
+                          {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+                        </Badge>
+                      </TableCell>
 
-                    <TableCell>
-                      <Badge
-                        variant={user.isActive ? "default" : "destructive"}
-                        className={`whitespace-nowrap ${
-                          user.isActive
+                      <TableCell>
+                        <Badge
+                          variant={user.isActive ? "default" : "destructive"}
+                          className={`whitespace-nowrap ${user.isActive
                             ? "bg-green-100 text-green-800 hover:bg-green-100 border-green-200"
                             : "bg-red-100 text-red-800 hover:bg-red-100 border-red-200"
-                        }`}
-                      >
-                        {user.isActive ? (
-                          <CheckCircle className="h-3 w-3 mr-1" />
-                        ) : (
-                          <XCircle className="h-3 w-3 mr-1" />
-                        )}
-                        {user.isActive ? "Active" : "Blocked"}
-                      </Badge>
-                    </TableCell>
+                            }`}
+                        >
+                          {user.isActive ? (
+                            <CheckCircle className="h-3 w-3 mr-1" />
+                          ) : (
+                            <XCircle className="h-3 w-3 mr-1" />
+                          )}
+                          {user.isActive ? "Active" : "Blocked"}
+                        </Badge>
+                      </TableCell>
 
-                    <TableCell>
-                      <div className="flex gap-2">
-                        <Button
-                          size="sm"
-                          variant={user.isActive ? "destructive" : "default"}
-                          className={`whitespace-nowrap ${
-                            !user.isActive
+                      <TableCell>
+                        <div className="flex gap-2">
+                          <Button
+                            size="sm"
+                            variant={user.isActive ? "destructive" : "default"}
+                            className={`whitespace-nowrap ${!user.isActive
                               ? "bg-green-600 hover:bg-green-700"
                               : ""
-                          }`}
-                          onClick={() => handleStatusToggle(user.id)}
-                        >
-                          {user.isActive ? "Block" : "Activate"}
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="whitespace-nowrap"
-                          onClick={() => openUserDetails(user)}
-                        >
-                          <Eye className="h-3 w-3 mr-1" />
-                          View
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))
+                              }`}
+                            onClick={() => handleStatusToggle(user.id)}
+                            disabled={isLoading}
+                          >
+                            {isLoading ? (
+                              <>
+                                <RefreshCw className="h-3 w-3 mr-1 animate-spin" />
+                                {user.isActive ? "Blocking..." : "Activating..."}
+                              </>
+                            ) : user.isActive ? (
+                              "Block"
+                            ) : (
+                              "Activate"
+                            )}
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            className="whitespace-nowrap"
+                            onClick={() => openUserDetails(user)}
+                            disabled={isLoading}
+                          >
+                            <Eye className="h-3 w-3 mr-1" />
+                            View
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })
               ) : (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-12">
@@ -363,6 +386,8 @@ function UserManagement() {
           {selectedUser &&
             (() => {
               const userData = getUserModalData(selectedUser);
+              const isLoading = loadingStates[userData.id] || false;
+
               return (
                 <>
                   <DialogHeader>
@@ -479,17 +504,26 @@ function UserManagement() {
                       </Button>
                       <Button
                         variant={userData.isActive ? "destructive" : "default"}
-                        className={`flex-1 ${
-                          userData.isActive
-                            ? "bg-green-600 hover:bg-green-700"
-                            : ""
-                        }`}
+                        className={`flex-1 ${!userData.isActive && !isLoading
+                          ? "bg-green-600 hover:bg-green-700"
+                          : ""
+                          }`}
                         onClick={() => {
                           handleStatusToggle(userData.id);
                           setSelectedUser(null);
                         }}
+                        disabled={isLoading}
                       >
-                        {userData.isActive ? "Block User" : "Activate User"}
+                        {isLoading ? (
+                          <>
+                            <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+                            {userData.isActive ? "Blocking..." : "Activating..."}
+                          </>
+                        ) : userData.isActive ? (
+                          "Block User"
+                        ) : (
+                          "Activate User"
+                        )}
                       </Button>
                     </div>
                   </div>

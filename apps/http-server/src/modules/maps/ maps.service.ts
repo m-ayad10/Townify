@@ -11,6 +11,7 @@ import {
   updateMapRepo,
   deleteMapRepo,
 } from "./maps.repository.js";
+import { findCreatorsByMapId, findSlugsByMapId } from "../spaces/spaces.repository.js";
 
 const uploadThumbnail = (path: string) =>
   uploadToCloudinary(path, {
@@ -55,13 +56,12 @@ export const uploadMapService = async (
 };
 
 export const fetchMapsService = async () => {
-  return cacheWrap("maps:list", 43200, getAllMapsRepo);
+  const maps = await cacheWrap("maps:list", 43200, async () => getAllMapsRepo());
+  return maps;
 };
 
 export const getMapService = async (id: string) => {
-  const map = await cacheWrap(`maps:${id}`, 43200, () =>
-    getMapByIdRepo(id)
-  );
+  const map = await cacheWrap(`maps:${id}`, 43200, async () => getMapByIdRepo(id));
   if (!map) throw new Error("MAP_NOT_FOUND");
   return map;
 };
@@ -72,7 +72,7 @@ export const updateMapService = async (
   thumbnail?: Express.Multer.File,
   mapJson?: Express.Multer.File
 ) => {
-  const map = await getMapByIdRepo(id);
+  const map = await cacheWrap(`maps:${id}`, 43200, async () => getMapByIdRepo(id));
   if (!map) throw new Error("MAP_NOT_FOUND");
 
   const data: any = {};
@@ -108,14 +108,42 @@ export const updateMapService = async (
   await cacheDel("maps:list");
   await cacheDel(`maps:${id}`);
 
+  // Map changed - invalidate all users who created spaces with this map
+  const affectedCreators = await findCreatorsByMapId(id);
+  await Promise.all(
+    affectedCreators.map(creatorId => cacheDel(`spaces:user:${creatorId}`))
+  );
+
+  // Invalidate all slug caches for spaces using this map
+  const affectedSlugs = await findSlugsByMapId(id);
+  await Promise.all(
+    affectedSlugs.map(slug => cacheDel(`spaces:slug:${slug}`))
+  );
+
   return updateMapRepo(id, data);
 };
 
 export const deleteMapService = async (id: string) => {
   const map = await getMapByIdRepo(id);
   if (!map) throw new Error("MAP_NOT_FOUND");
+
+  // Get affected creators before deletion
+  const affectedCreators = await findCreatorsByMapId(id);
+  const affectedSlugs = await findSlugsByMapId(id);
+
   if (map.thumbnailId) await deleteFromCloudinary(map.thumbnailId);
   await cacheDel("maps:list");
   await cacheDel(`maps:${id}`);
+
+  // Invalidate all affected users' space caches
+  await Promise.all(
+    affectedCreators.map(creatorId => cacheDel(`spaces:user:${creatorId}`))
+  );
+
+  // Invalidate all slug caches
+  await Promise.all(
+    affectedSlugs.map(slug => cacheDel(`spaces:slug:${slug}`))
+  );
+
   await deleteMapRepo(id);
 };

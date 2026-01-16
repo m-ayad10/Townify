@@ -8,11 +8,11 @@ import store from './Redux/stroe.ts'
 import { LiveKitProvider } from './contexts/LiveKitContext.tsx'
 
 createRoot(document.getElementById('root')!).render(
-     <Provider store={store}>
-      <LiveKitProvider>
-        <Toaster />
-        <App />
-      </LiveKitProvider>
-    </Provider>
+  <Provider store={store}>
+    <LiveKitProvider>
+      <Toaster />
+      <App />
+    </LiveKitProvider>
+  </Provider>
 )
 

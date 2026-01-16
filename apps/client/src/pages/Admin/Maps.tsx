@@ -29,7 +29,6 @@ function Maps() {
   const user = useSelector((state: RootState) => state.user);
 
   const [isCreating, setIsCreating] = useState(false);
-  const [isEditing, setIsEditing] = useState<string | null>(null);
   const [editingMap, setEditingMap] = useState<MapSchemaI | null>(null);
 
   const dispatch = useDispatch<AppDispatch>();
@@ -37,12 +36,17 @@ function Maps() {
   const [filteredMaps, setFilteredMaps] = useState<MapSchemaI[]>([]);
   const [open, setOpen] = useState(false);
 
+  // Track loading states per map ID
+  const [deletingStates, setDeletingStates] = useState<Record<string, boolean>>({});
+  const [editingStates, setEditingStates] = useState<Record<string, boolean>>({});
+
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     startTransition(() => {
       setSearchQuery(value);
     });
   };
+
   useEffect(() => {
     const list = map?.maps ?? [];
     const q = searchQuery.trim().toLowerCase();
@@ -58,11 +62,21 @@ function Maps() {
   }, [map.maps, searchQuery]);
 
   const handleDelete = async (id: string) => {
+    // Set deleting state for this specific map
+    setDeletingStates(prev => ({ ...prev, [id]: true }));
+
     try {
       console.log("Deleting map:", id);
-    await dispatch(deleteMap(id)).unwrap();
+      await dispatch(deleteMap(id)).unwrap();
     } catch (error) {
-      
+      console.error("Error deleting map:", error);
+    } finally {
+      // Clear deleting state for this map
+      setDeletingStates(prev => {
+        const newState = { ...prev };
+        delete newState[id];
+        return newState;
+      });
     }
   };
 
@@ -70,15 +84,15 @@ function Maps() {
     try {
       setIsCreating(true);
       console.log("Creating map:", data);
-      const fomData = new FormData();
-      fomData.append("name", data.name);
+      const formData = new FormData();
+      formData.append("name", data.name);
       if (data.thumbnail instanceof File) {
-        fomData.append("thumbnail", data.thumbnail);
+        formData.append("thumbnail", data.thumbnail);
       }
       if (data.mapJson instanceof File) {
-        fomData.append("mapJson", data.mapJson);
+        formData.append("mapJson", data.mapJson);
       }
-      await dispatch(uploadMap(fomData)).unwrap();
+      await dispatch(uploadMap(formData)).unwrap();
       setOpen(false);
     } catch (error) {
       console.error("Error creating map:", error);
@@ -90,8 +104,10 @@ function Maps() {
   const handleUpdateMap = async (data: MapFormData) => {
     if (!editingMap) return;
 
+    // Set editing state for this specific map
+    setEditingStates(prev => ({ ...prev, [editingMap.id]: true }));
+
     try {
-      setIsEditing(editingMap.id);
       const formData = new FormData();
       formData.append("name", data.name);
       if (data.thumbnail instanceof File) {
@@ -101,10 +117,16 @@ function Maps() {
         formData.append("mapJson", data.mapJson);
       }
       await dispatch(updateMap({ id: editingMap.id, data: formData })).unwrap();
-    } catch (error) {
-    } finally {
-      setIsEditing(null);
       setEditingMap(null);
+    } catch (error) {
+      console.error("Error updating map:", error);
+    } finally {
+      // Clear editing state for this map
+      setEditingStates(prev => {
+        const newState = { ...prev };
+        delete newState[editingMap.id];
+        return newState;
+      });
     }
   };
 
@@ -165,6 +187,8 @@ function Maps() {
               map={map}
               onDelete={() => handleDelete(map.id)}
               onEdit={() => openEditModal(map)}
+              isDeleting={deletingStates[map.id] || false}
+              isEditing={editingStates[map.id] || false}
             />
           ))}
         </div>
@@ -184,7 +208,7 @@ function Maps() {
             <EditMapModal
               map={editingMap}
               onUpdate={handleUpdateMap}
-              isSubmitting={isEditing === editingMap.id}
+              isSubmitting={editingStates[editingMap.id] || false}
             />
           </DialogContent>
         </Dialog>
@@ -192,6 +216,5 @@ function Maps() {
     </div>
   );
 }
-
 
 export default Maps;
