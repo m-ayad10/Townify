@@ -55,10 +55,6 @@ function EditSpacePage() {
     }
     fetchSpaceDetails()
   },[slug])
- 
-
-
-
 
 
   return (

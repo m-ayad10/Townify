@@ -33,6 +33,7 @@ import {
 import { inviteApprovalEmail, sendInvitationEmail } from "../../shared/services/nodemailer.service.js";
 import { cacheDel, cacheWrap } from "@repo/cache/dist/index.js";
 import { prisma } from "@repo/database";
+import { publishSpaceEvent } from "src/redis/publish.js";
 
 
 export const createSpaceService = async (
@@ -286,11 +287,29 @@ export const requestAccessService = async (
     }
   }
 
-  await createLinkInvite(space.id, user.email, userId);
+  const invite = await createLinkInvite(space.id, user.email, userId);
+
+  await publishSpaceEvent({
+    type: "JOIN_REQUEST",
+    spaceId: space.id,
+    payload: {
+      adminUserId: space.creatorId,
+      requester: {
+        createdAt : new Date(),
+        id : invite.id,
+        email: user.email,
+        userId,
+        spaceId : space.id,
+        status : 'pending',
+        type : 'link',
+        userName: user.name,
+        inviteId: invite.id,
+      },
+    },
+  });
 
   return true;
 };
-
 
 export const removeInvitesService = async (userId: string, inviteId: string) => {
   const inivite = await findInviteById(inviteId);
@@ -327,6 +346,17 @@ export const approveInviteService = async (inviteId: string, userId: string) => 
     addMember(invite.spaceId, invite.userId!),
     approveInviteById(inviteId),
   ])
+
+  await publishSpaceEvent({
+    type: "JOIN_APPROVED",
+    spaceId: space.id,
+    payload: {
+      userId: invite.userId,
+      spaceSlug: space.slug,
+      spaceName: space.name
+    }
+  });
+
   await inviteApprovalEmail(
     invite.email || "",
     space.name,
@@ -387,7 +417,6 @@ export const bulkApproveInvitesService = async (userId: string, slug: string, in
   await Promise.allSettled(spaceApprovedEmail)
   return { invites, members };
 }
-
 
 export const getSpaceManageDetailsService = async (slug: string, userId: string) => {
   const space = await getSpaceManageDetailsRepo(slug);

@@ -9,6 +9,8 @@ import swaggerUi from "swagger-ui-express";
 import { swaggerSpec } from "./config/swagger.js";
 import cookieParser from "cookie-parser";
 import cors from "cors";
+import LiveKitRouter from "./modules/livekit/livekit.routes.js";
+import { connectRedisPublisher } from "./redis/redis.js";
 
 
 const app = express();
@@ -44,11 +46,14 @@ app.use('/map', mapRoute);
 app.use('/avatar', avatarRoute);
 app.use('/admin',adminRoute);
 
-import LiveKitRouter from "./modules/livekit/livekit.routes.js";
 app.use('/api/livekit', LiveKitRouter);
 
 
+const start = async ()=>{
+    await connectRedisPublisher();
+    app.listen(8080,() => {
+        console.log("Server Listining at 8080");
+    })
+}
 
-app.listen(8080,() => {
-    console.log("Server Listining at 8080")
-})
+start();
