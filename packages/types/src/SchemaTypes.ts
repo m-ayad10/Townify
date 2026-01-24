@@ -76,8 +76,9 @@ export interface SpaceInviteI {
   email?: string | null;
   userId?: string | null;
   type: InviteType;
+  inviteId: string;
   status: InviteStatus;
   createdAt: string; // ISO date string
-
   space?: SpaceI;
+  userName: string
 }

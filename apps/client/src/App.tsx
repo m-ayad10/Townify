@@ -28,12 +28,16 @@ import { fetchUserSpacesThunk } from "./Redux/Slice/UserSpace/UserSpaceThunk";
 import { AdminProtectedRoute, ProtectedRoute } from "./AuthMiddleware";
 import Profile from "./pages/Profile";
 import DashBoardChat from "./components/Space-Chat/DashBoardChat";
+import { useNotificationSocket } from "./hooks/useNotificationSocket";
+import JoinApprovalToast from "./components/Notification/User/JoinApprovalToast";
+
 
 function App() {
   const dispatch = useDispatch<AppDispatch>();
   const auth = useSelector((state: RootState) => state.user);
-  const userFetched = useRef(false)
-  const isFetched = useRef(false)
+  const userFetched = useRef(false);
+  const isFetched = useRef(false);
+  const { user } = useSelector((state: RootState) => state.user);
 
   useEffect(() => {
     if (userFetched.current) return;
@@ -53,6 +57,8 @@ function App() {
     isFetched.current = true;
   }, [auth.status]);
 
+  useNotificationSocket(user?.id);
+
   const AdminSideBar = () => {
     return (
       <Sidebar>
@@ -63,6 +69,7 @@ function App() {
   return (
     <GoogleOAuthProvider clientId={import.meta.env.VITE_CLIENT_ID}>
       <BrowserRouter>
+        <JoinApprovalToast />
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/login" element={<Login />} />

@@ -25,11 +25,11 @@ import {
 import { formatDistanceToNow } from "date-fns";
 import type { SpaceI, SpaceInviteI, SpaceMembersI } from "@repo/types";
 import InviteMembersModal from "./InvitememberModal";
-import { 
-  approveRequestAccess, 
+import {
+  approveRequestAccess,
   removeInvitation,
   bulkRemoveInvitations,
-  bulkApproveInvitations 
+  bulkApproveInvitations
 } from "@/api/SpaceApi";
 import { toast } from "sonner";
 
@@ -41,11 +41,11 @@ type LoadingState = {
   };
 };
 
-function InvitationsTab({ 
-  spaceDetails, 
-  setSpaceDetails 
-}: { 
-  spaceDetails: SpaceI | null; 
+function InvitationsTab({
+  spaceDetails,
+  setSpaceDetails
+}: {
+  spaceDetails: SpaceI | null;
   setSpaceDetails: React.Dispatch<React.SetStateAction<SpaceI | null>>;
 }) {
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
@@ -62,7 +62,7 @@ function InvitationsTab({
     approved: number;
   }>();
   const [isProcessingBulk, setIsProcessingBulk] = useState(false);
-  
+
   // Track loading states per invitation
   const [loadingStates, setLoadingStates] = useState<LoadingState>({});
 
@@ -85,12 +85,53 @@ function InvitationsTab({
     };
     setCounts(counts);
     setFilteredInvitations(filtered || null);
-    
+
     // Clear selection when filtered invitations change
-    setSelectedIds(prev => prev.filter(id => 
+    setSelectedIds(prev => prev.filter(id =>
       filtered?.some(inv => inv.id === id)
     ));
   }, [spaceDetails, filter]);
+
+  const handler = (event: Event) => {
+    const customEvent = event as CustomEvent;
+    const payload = customEvent.detail;
+
+    if (!payload) return;
+
+    const newInvite: SpaceInviteI = {
+      id: payload.id,
+      email: payload.email,
+      userId: payload.userId,
+      spaceId: payload.spaceId,
+      status: payload.status,
+      type: payload.type,
+      createdAt: payload.createdAt,
+      inviteId: payload.inviteId,
+      userName: payload.userName
+    };
+
+    setSpaceDetails(prev => {
+      if (!prev) return prev;
+
+      // Prevent duplicates
+      const exists = prev.invites?.some(inv => inv.id === newInvite.id);
+      if (exists) return prev;
+
+      return {
+        ...prev,
+        invites: [newInvite, ...(prev.invites || [])]
+      };
+    });
+  };
+
+  useEffect(() => {
+    window.addEventListener("JOIN_REQUEST_RECEIVED", handler as EventListener);
+
+    return () => {
+      window.removeEventListener("JOIN_REQUEST_RECEIVED", handler as EventListener);
+    };
+  }, []);
+
 
   // Check if all visible items are selected
   const allSelected =
@@ -100,7 +141,7 @@ function InvitationsTab({
   // Handlers
   const toggleSelectAll = () => {
     if (!filteredInvitations) return;
-    
+
     if (allSelected) {
       // Deselect all
       setSelectedIds([]);
@@ -131,11 +172,10 @@ function InvitationsTab({
     }));
   };
 
-
   const handleRemoveInvitation = async (invitation: SpaceInviteI) => {
     // Set loading state only for remove action
     setInvitationLoading(invitation.id, 'remove', true);
-    
+
     try {
       await removeInvitation(invitation.id);
       if (spaceDetails) {
@@ -164,7 +204,7 @@ function InvitationsTab({
   const handleAcceptInvitation = async (invitation: SpaceInviteI) => {
     // Set loading state only for accept action
     setInvitationLoading(invitation.id, 'accept', true);
-    
+
     try {
       const response = await approveRequestAccess(invitation.id);
       const updatedInvites: SpaceInviteI[] | undefined = spaceDetails?.invites?.map((inv) => {
@@ -193,28 +233,28 @@ function InvitationsTab({
     setIsProcessingBulk(true);
     try {
       const response = await bulkRemoveInvitations(spaceDetails.slug, selectedIds);
-      
+
       if (spaceDetails) {
         const updatedInvites = spaceDetails.invites?.filter(
           inv => !selectedIds.includes(inv.id)
         ) || [];
-        
+
         const selectedInvitations = spaceDetails.invites?.filter(
           inv => selectedIds.includes(inv.id)
         ) || [];
-        
+
         const emailsToRemove = selectedInvitations.map(inv => inv.email);
-        const updatedMembers = spaceDetails.members?.filter(member => 
+        const updatedMembers = spaceDetails.members?.filter(member =>
           !emailsToRemove.includes(member.user?.email)
         ) || [];
-        
-        setSpaceDetails({ 
-          ...spaceDetails, 
-          invites: updatedInvites, 
-          members: updatedMembers 
+
+        setSpaceDetails({
+          ...spaceDetails,
+          invites: updatedInvites,
+          members: updatedMembers
         });
       }
-      toast.success(response.data.message || "Selected invitations removed successfully", {duration: 1000});  
+      toast.success(response.data.message || "Selected invitations removed successfully", { duration: 1000 });
       setSelectedIds([]);
     } catch (error: any) {
       console.error("Error in bulk remove:", error);
@@ -228,21 +268,21 @@ function InvitationsTab({
   };
 
   const handleBulkAccept = async () => {
-    if (selectedIds.length === 0 || !spaceDetails || isProcessingBulk) return;  
+    if (selectedIds.length === 0 || !spaceDetails || isProcessingBulk) return;
     setIsProcessingBulk(true);
     try {
       const selectedInvitations = spaceDetails.invites?.filter(
         inv => selectedIds.includes(inv.id) && inv.status === "pending" && inv.type === "link"
       ) || [];
-      
+
       if (selectedInvitations.length === 0) {
         toast.error("No pending link invitations selected for approval");
         return;
       }
-      
+
       const pendingLinkIds = selectedInvitations.map(inv => inv.id);
       const response = await bulkApproveInvitations(spaceDetails.slug, pendingLinkIds);
-      
+
       if (spaceDetails) {
         const updatedInvites = spaceDetails.invites?.map(inv => {
           if (pendingLinkIds.includes(inv.id)) {
@@ -250,22 +290,22 @@ function InvitationsTab({
           }
           return inv;
         }) || [];
-        
+
         const newMembers = response.data?.members || [];
         const updatedMembers = [...(spaceDetails.members || []), ...newMembers];
-        
-        setSpaceDetails({ 
-          ...spaceDetails, 
-          invites: updatedInvites, 
-          members: updatedMembers 
+
+        setSpaceDetails({
+          ...spaceDetails,
+          invites: updatedInvites,
+          members: updatedMembers
         });
       }
-      toast.success(response.data.message || "Selected invitations approved successfully", {duration: 1000});
-      const remainingSelectedIds = selectedIds.filter(id => 
+      toast.success(response.data.message || "Selected invitations approved successfully", { duration: 1000 });
+      const remainingSelectedIds = selectedIds.filter(id =>
         !pendingLinkIds.includes(id)
       );
       setSelectedIds(remainingSelectedIds);
-      
+
     } catch (error: any) {
       console.error("Error in bulk accept:", error);
       toast.error(
@@ -287,12 +327,12 @@ function InvitationsTab({
 
   // Get selected invitations for analysis
   const selectedInvitations = spaceDetails?.invites?.filter(inv => selectedIds.includes(inv.id)) || [];
-  
+
   // Calculate counts for UI display
   const pendingLinkCount = selectedInvitations.filter(
     inv => inv.status === "pending" && inv.type === "link"
   ).length;
-  
+
   const pendingCount = selectedInvitations.filter(inv => inv.status === "pending").length;
   const approvedCount = selectedInvitations.filter(inv => inv.status === "approved").length;
   const emailCount = selectedInvitations.filter(inv => inv.type === "email").length;
@@ -511,7 +551,7 @@ function InvitationsTab({
                   const isAcceptLoading = loadingStates[invitation.id]?.accept || false;
                   const isRemoveLoading = loadingStates[invitation.id]?.remove || false;
                   const isInvitationProcessing = isAcceptLoading || isRemoveLoading;
-                  
+
                   return (
                     <div
                       key={invitation.id}
@@ -531,11 +571,10 @@ function InvitationsTab({
                       <div className="col-span-3 flex items-center min-w-0">
                         <div className="flex items-center gap-3 min-w-0 flex-1">
                           <div
-                            className={`p-2 rounded-lg flex-shrink-0 ${
-                              invitation.type === "email"
-                                ? "bg-purple-100 text-purple-600"
-                                : "bg-blue-100 text-blue-600"
-                            }`}
+                            className={`p-2 rounded-lg flex-shrink-0 ${invitation.type === "email"
+                              ? "bg-purple-100 text-purple-600"
+                              : "bg-blue-100 text-blue-600"
+                              }`}
                           >
                             {invitation.type === "email" ? (
                               <Mail className="h-4 w-4" />
