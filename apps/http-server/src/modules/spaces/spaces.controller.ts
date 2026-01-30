@@ -17,6 +17,7 @@ import {
   bulkApproveInvitesService,
   getSpaceManageDetailsService,
 } from "./spaces.service.js";
+import { redisPublisher } from "../../redis/redis.js";
 
 export const createSpace = async (req: Request, res: Response) => {
   try {
@@ -126,6 +127,22 @@ export const toggleMember = async (req: Request, res: Response) => {
       req.user!.userId,
       req.params.userId as string
     );
+    console.log("[BLOCKING] Member toggled:", { status: blocked.status, userId: req.params.userId, slug: req.params.slug });
+    if (blocked.status === "blocked") {
+      const event = {
+        type: "USER_BLOCKED",
+        payload: {
+          userId: req.params.userId,
+          spaceName: req.params.slug,
+        },
+      };
+      console.log("[BLOCKING] Publishing to Redis:", event);
+      await redisPublisher.publish(
+        "SPACE_EVENTS",
+        JSON.stringify(event)
+      );
+      console.log("[BLOCKING] Event published successfully");
+    }
     res.json({ status: blocked.status });
   } catch (e: any) {
     res.status(403).json({ message: e.message });
@@ -232,22 +249,22 @@ export const bulkApproveInvites = async (req: Request, res: Response) => {
 };
 
 
-export const getSpaceManageDetails=async(req:Request,res:Response)=>{
+export const getSpaceManageDetails = async (req: Request, res: Response) => {
   try {
-    const { slug } = req.params;  
+    const { slug } = req.params;
     const space = await getSpaceManageDetailsService(
       slug as string,
       req.user!.userId
     );
     res.status(200).json({ space });
   }
-    catch (error: any) {
+  catch (error: any) {
     if (error.message === "SPACE_NOT_FOUND") {
       return res.status(404).json({ message: "Space not found" });
     }
     if (error.message === "FORBIDDEN") {
       return res.status(403).json({ message: "Forbidden" });
     }
-    res.status(500).json(error.message||"Internal Server Error");
+    res.status(500).json(error.message || "Internal Server Error");
   }
 };

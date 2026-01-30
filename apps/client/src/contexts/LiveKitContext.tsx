@@ -101,7 +101,8 @@ export const LiveKitProvider: React.FC<{ children: React.ReactNode }> = ({ child
     room.on(RoomEvent.TrackUnpublished, updateParticipants);
 
     try {
-      const response = await getLiveKitToken(targetRoomName, user?.name || "", user?.id || "");
+      const avatarImage = user?.avatar?.idle || "";
+      const response = await getLiveKitToken(targetRoomName, user?.name || "", user?.id || "", avatarImage);
       await room.connect(LIVEKIT_URL, response.data.token);
 
       // Apply our pre-existing intent to the room

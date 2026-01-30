@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState, useCallback, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useSelector } from "react-redux";
-import type { RootState } from "@/Redux/stroe";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "@/Redux/stroe";
 import type { AvatarSchema } from "@/types/type";
 import Game from "../game/Game";
 import Navbar from "@/components/invite/Navbar";
@@ -19,6 +19,8 @@ import { LocalVideoTrack, RemoteVideoTrack, LocalAudioTrack, RemoteAudioTrack } 
 import ExpandedFocusView from "@/components/LiveKit/ExpandedFocus";
 import CollapsedVideoGrid from "@/components/LiveKit/CollapsedVideoGrid";
 import ExpandedVideoGrid from "@/components/LiveKit/ExpandedVideoGrid";
+import { fetchSpaceDetails } from "@/Redux/Slice/ManageSpace/ManageSpaceThunk";
+import { BlockedUserDialog } from "@/components/Notification/User/BlockedUserDialog";
 
 type SpaceState = "loading" | "allowed" | "blocked" | "not-found";
 type VideoViewMode = "collapsed" | "expanded-grid" | "expanded-focus";
@@ -29,6 +31,7 @@ export default function Space() {
 
   const { user } = useSelector((state: RootState) => state.user);
   const { avatars } = useSelector((state: RootState) => state.avatars);
+  const dispatch = useDispatch<AppDispatch>()
 
   const [state, setState] = useState<SpaceState>("loading");
   const [mapUrl, setMapUrl] = useState<string | null>(null);
@@ -42,6 +45,7 @@ export default function Space() {
   const nearbyUserIds = useSelector((state: RootState) => state.visibility.nearbyUserIds);
   const spaceUserIds = useSelector((state: RootState) => state.visibility.spaceUserIds);
   const selfSpaceId = useSelector((state: RootState) => state.visibility.selfSpaceId);
+  const spaceUser = useSelector((state: RootState) => state.manageSpace)
   const isFetched = useRef(false)
 
   const liveKit = useLiveKit();
@@ -89,10 +93,13 @@ export default function Space() {
         setState("loading");
 
         const accessRes = await checkSpaceAccess(slug);
-        const { spaceId } = accessRes.data;
+        const { spaceId, role } = accessRes.data;
 
         const spaceRes = await fetchSpaceBySlug(slug);
 
+        if (role === "owner" && spaceUser.status !== 'succeeded') {
+          await dispatch(fetchSpaceDetails(slug)).unwrap()
+        }
         setMapUrl(spaceRes.data.space.map.configJson);
         setSpaceId(spaceId);
         setState("allowed");
@@ -146,6 +153,10 @@ export default function Space() {
 
   // Compute Visible Participants
   const visibleParticipants = useMemo(() => {
+    console.log("selfSpaceId", selfSpaceId);
+    console.log("participants", participants);
+    console.log("nearbyUserIds", nearbyUserIds);
+    console.log("spaceUserIds", spaceUserIds);
     if (selfSpaceId) {
       return participants.filter(p => spaceUserIds.includes(p.identity) && p.identity !== user?.id);
     } else {
@@ -212,9 +223,7 @@ export default function Space() {
 
   const focusedParticipant = getParticipantData(focusedParticipantId);
 
-  // Get all participants data (local first, then remote)
   const allParticipants = useMemo(() => {
-    // Only include local video when there are visible participants
     if (visibleParticipants.length === 0) {
       return visibleParticipants.map(p => {
         const videoPub = Array.from(p.videoTrackPublications.values())[0];
@@ -290,6 +299,7 @@ export default function Space() {
 
   return (
     <div className="w-screen h-screen relative overflow-hidden bg-[#0f172a]">
+      <BlockedUserDialog />
       <Game
         mapUrl={mapUrl}
         avatarMap={avatarMap}
