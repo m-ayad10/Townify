@@ -8,10 +8,10 @@ const apiKey = process.env.LIVEKIT_API_KEY;
 const apiSecret = process.env.LIVEKIT_API_SECRET;
 
 export const getToken = async (req: Request, res: Response) => {
-  const { roomName, participantId ,participantName} = req.body;
+  const { roomName, participantId, participantName, avatarImage } = req.body;
 
-  if (!roomName || !participantId||!participantName) {
-    res.status(400).json({ errorMessage: "roomName and participantId are required" });
+  if (!roomName || !participantId || !participantName) {
+    res.status(400).json({ errorMessage: "roomName, participantId, and participantName are required" });
     return;
   }
 
@@ -24,6 +24,7 @@ export const getToken = async (req: Request, res: Response) => {
     const at = new AccessToken(apiKey, apiSecret, {
       identity: participantId,
       name: participantName,
+      metadata: JSON.stringify({ avatarImage: avatarImage || "" }),
     });
 
     at.addGrant({

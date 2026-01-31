@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 type ApprovalPayload = {
   spaceSlug: string;
@@ -36,7 +37,10 @@ export default function JoinApprovalToast() {
 
     const declinedHandler = () => {
       setData(null);
-      alert("❌ Your join request was declined");
+      toast.error("❌ Your join request was declined", {
+        position: "top-right",
+        className: "bg-red-500 text-white"
+      });
     };
 
     window.addEventListener("JOIN_APPROVED", approvedHandler);

@@ -1,6 +1,9 @@
 import { useEffect } from "react";
+import { useDispatch } from "react-redux";
+import { addInvitation } from "@/Redux/Slice/ManageSpace/ManageSpaceSlice";
 
 export function useNotificationSocket(userId?: string) {
+  const dispatch = useDispatch();
   useEffect(() => {
     if (!userId) return;
 
@@ -28,14 +31,21 @@ export function useNotificationSocket(userId?: string) {
         window.dispatchEvent(new Event("JOIN_DECLINED"));
       }
 
-      // ✅ FIXED JOIN REQUEST EVENT
       if (msg.type === "JOIN_REQUEST_RECEIVED") {
+        dispatch(addInvitation(msg.payload));
         window.dispatchEvent(
           new CustomEvent("JOIN_REQUEST_RECEIVED", {
             detail: msg.payload,
           })
         );
       }
+
+      if (msg.type === "USER_BLOCKED") {
+        window.dispatchEvent(
+          new CustomEvent("USER_BLOCKED", { detail: msg.payload })
+        );
+      }
+
 
     };
 
