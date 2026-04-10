@@ -16,16 +16,11 @@ function CollapsedVideoGrid({ participants, onEnterExpandedGrid }: CollapsedVide
 
     return (
         <div className="absolute top-3 bottom-24 left-1/2 -translate-x-1/2 z-30 pointer-events-none flex flex-col items-center justify-start w-full max-w-[95vw] xl:max-w-screen-xl">
-            {/* 
-                Container for the grid. 
-                - Max height ensures we don't cover the bottom bar.
-                - Centered horizontally.
-            */}
-            <div className="pointer-events-auto w-full max-h-full flex justify-center">
+            <div className="pointer-events-none w-full max-h-full flex justify-center">
                 <ScrollArea className="w-full rounded-md" type="hover">
-                    <div className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-3 md:gap-4 auto-rows-fr justify-items-center">
+                    <div className="p-3 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2 md:gap-3 auto-rows-fr justify-items-center">
                         {participants.map((participant) => (
-                            <div key={participant.id} className="w-full aspect-video">
+                            <div key={participant.id} className="w-full aspect-video pointer-events-auto">
                                 <VideoTile
                                     participant={participant}
                                     mode="collapsed"

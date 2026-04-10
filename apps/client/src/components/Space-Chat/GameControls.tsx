@@ -1,8 +1,10 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { Mic, MicOff, Video, VideoOff, MessageSquare, LogOut, Users } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useLiveKit } from "@/contexts/LiveKitContext";
-import MembersModal from "./Modal"; // Adjust the import path as needed
+import MembersModal from "./Modal";
+import { useSelector } from "react-redux";
+import type { RootState } from "@/Redux/stroe";
 
 interface GameControlsProps {
     totalMembers: number;
@@ -18,6 +20,13 @@ export default function GameControls({
 }: GameControlsProps) {
     const navigate = useNavigate();
     const { isAudioEnabled, isVideoEnabled, toggleAudio, toggleVideo, disconnect } = useLiveKit();
+    const manageSpace = useSelector((state: RootState) => state.manageSpace);
+
+    const pendingInviteCount = useMemo(() => {
+        return manageSpace.spaces?.invites?.filter(
+            (i) => i.status === "pending" && i.type === "link"
+        ).length ?? 0;
+    }, [manageSpace.spaces?.invites]);
 
     // Modal state
     const [isModalOpen, setIsModalOpen] = useState(false);
@@ -31,7 +40,6 @@ export default function GameControls({
         <>
             <div className="fixed bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-4 bg-gray-900/95 backdrop-blur-sm px-6 py-3 rounded-2xl border border-gray-700 shadow-2xl z-[200]">
 
-                {/* Member Count - Clickable trigger */}
                 <button
                     onClick={() => setIsModalOpen(true)}
                     className="
@@ -43,7 +51,14 @@ export default function GameControls({
                     title="View members and invitations"
                     aria-label={`View ${totalMembers} members and invitations`}
                 >
-                    <Users className="w-5 h-5" />
+                    <div className="relative">
+                        <Users className="w-5 h-5" />
+                        {pendingInviteCount > 0 && (
+                            <span className="absolute -top-1.5 -right-1.5 min-w-[14px] h-[14px] rounded-full bg-red-500 text-white text-[9px] font-bold flex items-center justify-center px-0.5 leading-none">
+                                {pendingInviteCount > 9 ? "9+" : pendingInviteCount}
+                            </span>
+                        )}
+                    </div>
                     <span className="font-semibold">{totalMembers}</span>
                 </button>
 
@@ -77,7 +92,7 @@ export default function GameControls({
                 <button
                     onClick={onToggleChat}
                     className={`p-3 rounded-xl transition-all relative ${isChatOpen
-                        ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/30"
+                        ? "bg-white/20 ring-1 ring-white/30 text-white"
                         : "bg-gray-800/80 hover:bg-gray-700/80 text-white"
                         }`}
                     title={isChatOpen ? "Close chat" : "Open chat"}
@@ -90,7 +105,7 @@ export default function GameControls({
                 <div className="pl-4 border-l border-gray-700">
                     <button
                         onClick={handleLeave}
-                        className="p-3 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors shadow-lg shadow-red-500/20"
+                        className="p-3 rounded-xl bg-red-600 hover:bg-red-700 text-white transition-colors"
                         title="Leave space"
                         aria-label="Leave space"
                     >

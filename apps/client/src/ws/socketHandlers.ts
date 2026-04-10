@@ -142,6 +142,7 @@ function process(scene: any, message: ServerMessage) {
       break;
 
     case "ROOM_CHAT":
+      console.log("Received room chat:", message.payload);
       pushMessage({
         ...message.payload,
         spaceId: MAIN_SPACE.id,

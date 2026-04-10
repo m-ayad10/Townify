@@ -11,7 +11,7 @@ import type { SpaceI, SpaceInviteI } from "@repo/types";
 import { useLiveKit } from "@/contexts/LiveKitContext";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/Redux/stroe";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
@@ -44,8 +44,8 @@ export default function MembersModal({
         <Dialog open={open} onOpenChange={onOpenChange}>
             <DialogContent
                 className="
-          min-h-[80vh]
-          max-h-[90vh]
+          min-h-[75vh]
+          max-h-[75vh]
           overflow-hidden
           p-0
           sm:max-w-lg
@@ -65,7 +65,7 @@ export default function MembersModal({
                 onInteractOutside={(e) => e.preventDefault()}
                 onOpenAutoFocus={(e) => e.preventDefault()}
             >
-                <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 pt-4 pb-0">
+                <div className="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-gray-100 px-6 py-4">
                     <div className="flex items-center justify-between">
                         <DialogTitle className="text-xl font-semibold text-gray-900">
                             {isAdminOrCreator ? "Manage Space" : "Members"}
@@ -107,92 +107,72 @@ function RegularView() {
     const activeMembersCount = participants.length + (room ? 1 : 0);
 
     return (
-        <div className="p-6">
-            <Card className="z-[230]">
-                <CardHeader>
-                    <CardTitle>
-                        Active Members ({activeMembersCount})
-                    </CardTitle>
-                </CardHeader>
-                <CardContent>
-                    <div className="rounded-lg border">
-                        <Table>
-                            <TableHeader>
-                                <TableRow>
-                                    <TableHead>Member</TableHead>
-                                </TableRow>
-                            </TableHeader>
-                            <TableBody>
-                                {/* Local Participant */}
-                                {room && (
-                                    <TableRow>
-                                        <TableCell>
-                                            <div className="flex items-center gap-3">
-                                                <Avatar className="h-8 w-8">
-                                                    <AvatarImage
-                                                        src={
-                                                            room.localParticipant.metadata
-                                                                ? JSON.parse(room.localParticipant.metadata).avatarImage
-                                                                : ""
-                                                        }
-                                                    />
-                                                    <AvatarFallback>
-                                                        {room.localParticipant.name?.charAt(0) || "?"}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div>
-                                                    <p className="font-medium">
-                                                        {room.localParticipant.name || "You"} (You)
-                                                    </p>
-                                                    <p className="text-sm text-muted-foreground">
-                                                        {room.localParticipant.identity}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                                {/* Remote Participants */}
-                                {participants.map((participant) => (
-                                    <TableRow key={participant.sid}>
-                                        <TableCell>
-                                            <div className="flex items-center gap-3">
-                                                <Avatar className="h-8 w-8">
-                                                    <AvatarImage
-                                                        src={
-                                                            participant.metadata
-                                                                ? JSON.parse(participant.metadata).avatarImage
-                                                                : ""
-                                                        }
-                                                    />
-                                                    <AvatarFallback>
-                                                        {participant.name?.charAt(0) || "?"}
-                                                    </AvatarFallback>
-                                                </Avatar>
-                                                <div>
-                                                    <p className="font-medium">
-                                                        {participant.name || "Unknown"}
-                                                    </p>
-                                                </div>
-                                            </div>
-                                        </TableCell>
-                                    </TableRow>
-                                ))}
-                                {participants.length === 0 && !room && (
-                                    <TableRow>
-                                        <TableCell colSpan={1} className="h-32 text-center">
-                                            <Users className="mx-auto h-8 w-8 text-muted-foreground" />
-                                            <p className="text-muted-foreground mt-2">
-                                                No members connected
-                                            </p>
-                                        </TableCell>
-                                    </TableRow>
-                                )}
-                            </TableBody>
-                        </Table>
+        <div className="p-5">
+            <div className="flex items-center justify-between mb-3">
+                <p className="text-xs font-semibold text-gray-400 uppercase tracking-wider">In this space</p>
+                <span className="text-xs text-gray-400">{activeMembersCount} online</span>
+            </div>
+
+            <div className="space-y-0.5">
+                {room && (
+                    <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="relative">
+                            <Avatar className="h-8 w-8">
+                                <AvatarImage
+                                    src={
+                                        room.localParticipant.metadata
+                                            ? JSON.parse(room.localParticipant.metadata).avatarImage
+                                            : ""
+                                    }
+                                />
+                                <AvatarFallback className="text-xs bg-gray-100">
+                                    {room.localParticipant.name?.charAt(0) || "?"}
+                                </AvatarFallback>
+                            </Avatar>
+                            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                                {room.localParticipant.name || "You"}
+                            </p>
+                        </div>
+                        <span className="text-[10px] text-gray-400 bg-gray-100 px-1.5 py-0.5 rounded font-medium">You</span>
                     </div>
-                </CardContent>
-            </Card>
+                )}
+
+                {participants.map((participant) => (
+                    <div key={participant.sid} className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-gray-50 transition-colors">
+                        <div className="relative">
+                            <Avatar className="h-8 w-8">
+                                <AvatarImage
+                                    src={
+                                        participant.metadata
+                                            ? JSON.parse(participant.metadata).avatarImage
+                                            : ""
+                                    }
+                                />
+                                <AvatarFallback className="text-xs bg-gray-100">
+                                    {participant.name?.charAt(0) || "?"}
+                                </AvatarFallback>
+                            </Avatar>
+                            <span className="absolute bottom-0 right-0 w-2.5 h-2.5 rounded-full bg-green-500 border-2 border-white" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                                {participant.name || "Unknown"}
+                            </p>
+                        </div>
+                    </div>
+                ))}
+
+                {participants.length === 0 && !room && (
+                    <div className="flex flex-col items-center justify-center py-16 text-center">
+                        <Users className="h-8 w-8 text-gray-200 mb-2" />
+                        <p className="text-sm font-medium text-gray-500">No one here yet</p>
+                        <p className="text-xs text-gray-400 mt-0.5">Members will appear when they join</p>
+                    </div>
+                )}
+            </div>
         </div>
     );
 }
@@ -337,13 +317,13 @@ function AdminView({ space, currentUser }: { space: SpaceI; currentUser: any }) 
     };
 
     return (
-        <div className="p-6 pt-4 sm:pt-2">
+        <div className="p-3 pt-3 sm:pt-3">
             <Tabs
                 value={activeTab}
                 onValueChange={setActiveTab}
                 className="w-full"
             >
-                <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1 rounded-lg">
+                <TabsList className="grid w-full grid-cols-2 bg-gray-100 p-1  pb-0 mb-0 rounded-lg">
                     <TabsTrigger
                         value="members"
                         className="data-[state=active]:bg-white data-[state=active]:shadow-sm rounded-md transition-all"
@@ -362,11 +342,11 @@ function AdminView({ space, currentUser }: { space: SpaceI; currentUser: any }) 
                     </TabsTrigger>
                 </TabsList>
 
-                <TabsContent value="members" className="mt-4">
+                <TabsContent value="members" className="mt-0">
                     <Card className="border-0 shadow-none">
-                        <CardHeader className="pb-4">
+                        <CardHeader className="pb-2 mb-4 ">
                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                                <CardTitle className="text-left">Space Members</CardTitle>
+                                <p className="text-sm font-semibold text-gray-900">Space Members</p>
                                 <div className="relative">
                                     <DropdownMenu>
                                         <DropdownMenuTrigger asChild>
@@ -397,7 +377,7 @@ function AdminView({ space, currentUser }: { space: SpaceI; currentUser: any }) 
                                             </div>
                                             <DropdownMenuItem
                                                 onClick={() => setMemberFilter("online")}
-                                                className={`cursor-pointer focus:bg-gray-100 ${memberFilter === "online" ? "bg-blue-50 text-blue-700" : ""}`}
+                                                className={`cursor-pointer focus:bg-gray-50 ${memberFilter === "online" ? "bg-gray-100 font-medium" : ""}`}
                                             >
                                                 <div className="flex items-center justify-between w-full">
                                                     <div className="flex items-center">
@@ -411,7 +391,7 @@ function AdminView({ space, currentUser }: { space: SpaceI; currentUser: any }) 
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                                 onClick={() => setMemberFilter("offline")}
-                                                className={`cursor-pointer focus:bg-gray-100 ${memberFilter === "offline" ? "bg-blue-50 text-blue-700" : ""}`}
+                                                className={`cursor-pointer focus:bg-gray-50 ${memberFilter === "offline" ? "bg-gray-100 font-medium" : ""}`}
                                             >
                                                 <div className="flex items-center justify-between w-full">
                                                     <div className="flex items-center">
@@ -425,7 +405,7 @@ function AdminView({ space, currentUser }: { space: SpaceI; currentUser: any }) 
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                                 onClick={() => setMemberFilter("active")}
-                                                className={`cursor-pointer focus:bg-gray-100 ${memberFilter === "active" ? "bg-blue-50 text-blue-700" : ""}`}
+                                                className={`cursor-pointer focus:bg-gray-50 ${memberFilter === "active" ? "bg-gray-100 font-medium" : ""}`}
                                             >
                                                 <div className="flex items-center justify-between w-full">
                                                     <div className="flex items-center">
@@ -439,7 +419,7 @@ function AdminView({ space, currentUser }: { space: SpaceI; currentUser: any }) 
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                                 onClick={() => setMemberFilter("blocked")}
-                                                className={`cursor-pointer focus:bg-gray-100 ${memberFilter === "blocked" ? "bg-blue-50 text-blue-700" : ""}`}
+                                                className={`cursor-pointer focus:bg-gray-50 ${memberFilter === "blocked" ? "bg-gray-100 font-medium" : ""}`}
                                             >
                                                 <div className="flex items-center justify-between w-full">
                                                     <div className="flex items-center">
@@ -453,7 +433,7 @@ function AdminView({ space, currentUser }: { space: SpaceI; currentUser: any }) 
                                             </DropdownMenuItem>
                                             <DropdownMenuItem
                                                 onClick={() => setMemberFilter("all")}
-                                                className={`cursor-pointer focus:bg-gray-100 ${memberFilter === "all" ? "bg-blue-50 text-blue-700" : ""}`}
+                                                className={`cursor-pointer focus:bg-gray-50 ${memberFilter === "all" ? "bg-gray-100 font-medium" : ""}`}
                                             >
                                                 <div className="flex items-center justify-between w-full">
                                                     <div className="flex items-center">
@@ -470,7 +450,7 @@ function AdminView({ space, currentUser }: { space: SpaceI; currentUser: any }) 
                                 </div>
                             </div>
                         </CardHeader>
-                        <CardContent className="pt-0">
+                        <CardContent className="pt-0 mt-0">
                             <div className="rounded-lg border border-gray-200">
                                 <Table>
                                     <TableHeader>
@@ -502,17 +482,20 @@ function AdminView({ space, currentUser }: { space: SpaceI; currentUser: any }) 
                                                         <TableCell className="hidden sm:table-cell py-3">
                                                             <div className="flex gap-2">
                                                                 {member.status === "blocked" ? (
-                                                                    <Badge className="bg-red-50 text-red-700 border-red-200 px-2 py-0.5">
+                                                                    <span className="inline-flex items-center gap-1.5 text-xs text-red-600">
+                                                                        <span className="w-1.5 h-1.5 rounded-full bg-red-400" />
                                                                         Blocked
-                                                                    </Badge>
+                                                                    </span>
                                                                 ) : isInSpace ? (
-                                                                    <Badge className="bg-green-50 text-green-700 border-green-200 px-2 py-0.5">
+                                                                    <span className="inline-flex items-center gap-1.5 text-xs text-green-600">
+                                                                        <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
                                                                         Online
-                                                                    </Badge>
+                                                                    </span>
                                                                 ) : (
-                                                                    <Badge variant="outline" className="bg-gray-50 text-gray-700 border-gray-200 px-2 py-0.5">
+                                                                    <span className="inline-flex items-center gap-1.5 text-xs text-gray-400">
+                                                                        <span className="w-1.5 h-1.5 rounded-full bg-gray-300" />
                                                                         Offline
-                                                                    </Badge>
+                                                                    </span>
                                                                 )}
                                                             </div>
                                                         </TableCell>
@@ -537,8 +520,8 @@ function AdminView({ space, currentUser }: { space: SpaceI; currentUser: any }) 
                                             <TableRow>
                                                 <TableCell colSpan={3} className="h-48">
                                                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                                                        <Users className="h-12 w-12 text-gray-300 mb-4" />
-                                                        <p className="text-gray-500 font-medium">No members found</p>
+                                                        <Users className="h-8 w-8 text-gray-200 mb-2" />
+                                                        <p className="text-gray-500 text-sm font-medium">No members found</p>
                                                         <p className="text-gray-400 text-sm mt-1">
                                                             {memberFilter === "online" && "No members are currently online"}
                                                             {memberFilter === "offline" && "No members are currently offline"}
@@ -570,7 +553,7 @@ function AdminView({ space, currentUser }: { space: SpaceI; currentUser: any }) 
                 <TabsContent value="invitations" className="mt-4">
                     <Card className="border-0 shadow-none">
                         <CardHeader className="pb-4">
-                            <CardTitle className="text-left">Pending Link Invitations</CardTitle>
+                            <p className="text-sm font-semibold text-gray-900">Pending Invitations</p>
                         </CardHeader>
                         <CardContent className="pt-0">
                             <div className="rounded-lg border border-gray-200">
@@ -599,10 +582,7 @@ function AdminView({ space, currentUser }: { space: SpaceI; currentUser: any }) 
                                                                 <div className="text-left">
                                                                     <p className="font-medium">{userName}</p>
                                                                     <p className="text-sm text-muted-foreground">{invitation.email}</p>
-                                                                    <div className="flex items-center gap-2 mt-1">
-                                                                        <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200 text-xs">Link</Badge>
-                                                                        <Badge variant="outline" className="bg-yellow-50 text-yellow-700 border-yellow-200 text-xs">Pending</Badge>
-                                                                    </div>
+                                                                    <span className="text-xs text-gray-400">Link invite</span>
                                                                 </div>
                                                             </div>
                                                         </TableCell>
@@ -637,8 +617,8 @@ function AdminView({ space, currentUser }: { space: SpaceI; currentUser: any }) 
                                             <TableRow>
                                                 <TableCell colSpan={2} className="h-48">
                                                     <div className="flex flex-col items-center justify-center py-12 text-center">
-                                                        <UserPlus className="h-12 w-12 text-gray-300 mb-4" />
-                                                        <p className="text-gray-500 font-medium">No pending invitations</p>
+                                                        <UserPlus className="h-8 w-8 text-gray-200 mb-2" />
+                                                        <p className="text-gray-500 text-sm font-medium">No pending invitations</p>
                                                         <p className="text-gray-400 text-sm mt-1">
                                                             There are no pending link invitations at the moment
                                                         </p>

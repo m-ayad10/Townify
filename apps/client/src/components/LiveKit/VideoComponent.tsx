@@ -1,6 +1,5 @@
 import type { LocalVideoTrack, RemoteVideoTrack } from "livekit-client";
 import { useEffect, useRef } from "react";
-import { Badge } from "@/components/ui/badge";
 
 function VideoComponent({
     track,
@@ -33,7 +32,7 @@ function VideoComponent({
         .slice(0, 2);
 
     return (
-        <div className="relative w-full h-full bg-gradient-to-br from-gray-900 to-gray-800">
+        <div className="relative w-full h-full bg-zinc-800">
             {track ? (
                 <video
                     ref={videoRef}
@@ -44,18 +43,16 @@ function VideoComponent({
                 />
             ) : (
                 <div className="flex flex-col items-center justify-center w-full h-full p-4">
-                    <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-600 to-blue-600 flex items-center justify-center mb-3">
-                        <span className="text-xl font-bold text-white">
+                    <div className="w-14 h-14 rounded-full bg-zinc-600 flex items-center justify-center mb-2">
+                        <span className="text-lg font-semibold text-white">
                             {initials}
                         </span>
                     </div>
-                    <span className="text-gray-300 font-medium text-sm text-center truncate max-w-full">
+                    <span className="text-zinc-300 font-medium text-sm text-center truncate max-w-full">
                         {participantIdentity}
                     </span>
                     {local && (
-                        <Badge variant="outline" className="mt-1 text-xs border-gray-600 text-gray-400">
-                            You
-                        </Badge>
+                        <span className="mt-1 text-[10px] text-zinc-500 font-medium">You</span>
                     )}
                 </div>
             )}
