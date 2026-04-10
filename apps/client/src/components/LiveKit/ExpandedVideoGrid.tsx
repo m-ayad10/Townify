@@ -12,6 +12,7 @@ interface ExpandedVideoGridProps {
 function ExpandedVideoGrid({ participants, onToggleFocus, onExitExpanded }: ExpandedVideoGridProps) {
     const totalParticipants = participants.length;
 
+    // const allParticipants = [...participants, ...participants, ...participants, ...participants, ...participants, ...participants, ...participants, ...participants, ...participants, ...participants];
 
     // Calculate grid layout based on participant count
     const getGridLayout = () => {
@@ -24,28 +25,25 @@ function ExpandedVideoGrid({ participants, onToggleFocus, onExitExpanded }: Expa
 
     const gridLayout = getGridLayout();
     return (
-        <div className="fixed inset-0 z-40 bg-gradient-to-br from-gray-900 to-black">
-            {/* Animated background effect */}
-            <div className="absolute inset-0 bg-grid-white/[0.02] bg-grid [mask-image:radial-gradient(ellipse_at_center,white,transparent)]" />
-
-            {/* Header Controls - Modern floating glassmorphism */}
-            <div className="absolute top-6 right-6 z-50 flex items-center gap-3">
+        <div className="fixed inset-0 z-40 bg-zinc-950">
+            {/* Close */}
+            <div className="absolute top-4 right-4 z-50">
                 <Button
                     size="icon"
                     variant="ghost"
                     onClick={onExitExpanded}
-                    className="group bg-white/10 hover:bg-white/20 backdrop-blur-lg border border-white/20 transition-all duration-300 hover:scale-105 hover:border-white/30"
+                    className="h-9 w-9 bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-300 hover:text-white transition-colors rounded-lg"
                     title="Collapse (Esc)"
                 >
-                    <X className="w-5 h-5 text-white/90 group-hover:text-white transition-colors" />
+                    <X className="w-4 h-4" />
                 </Button>
             </div>
 
-            {/* Main Content */}
-            <div className="h-full pt-20 pb-8 px-6">
+            {/* Grid */}
+            <div className="h-full pt-16 pb-16 px-4">
                 <ScrollArea className={`h-full ${gridLayout.scrollable ? 'pr-4' : ''}`}>
                     <div
-                        className={`grid gap-6 ${gridLayout.scrollable ? 'pb-4' : ''}`}
+                        className={`grid gap-3 ${gridLayout.scrollable ? 'pb-4' : ''}`}
                         style={{
                             gridTemplateColumns: `repeat(${gridLayout.cols}, minmax(0, 1fr))`,
                             gridTemplateRows: `repeat(${gridLayout.rows}, minmax(0, 1fr))`,
@@ -55,30 +53,23 @@ function ExpandedVideoGrid({ participants, onToggleFocus, onExitExpanded }: Expa
                         {participants.map((participant) => (
                             <div
                                 key={participant.id}
-                                className="relative group/video-tile rounded-2xl overflow-hidden transform transition-all duration-300 hover:scale-[1.02] hover:shadow-2xl"
+                                className="relative group/video-tile rounded-lg overflow-hidden"
                             >
-                                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 opacity-0 group-hover/video-tile:opacity-100 transition-opacity duration-500" />
 
                                 <VideoTile
                                     participant={participant}
                                     mode="expanded-grid"
                                 />
 
-                                {/* Modern Focus Button Overlay */}
-                                <div className="absolute top-4 right-4 opacity-0 group-hover/video-tile:opacity-100 transition-all duration-300 translate-y-2 group-hover/video-tile:translate-y-0 z-10">
+                                {/* Focus button */}
+                                <div className="absolute top-3 right-3 opacity-0 group-hover/video-tile:opacity-100 transition-opacity duration-150 z-10">
                                     <Button
                                         size="icon"
                                         onClick={() => onToggleFocus(participant.id)}
-                                        className="relative bg-gradient-to-br from-blue-600 to-purple-600 hover:from-blue-500 hover:to-purple-500 backdrop-blur-lg border border-white/20 shadow-2xl hover:shadow-blue-500/25 transition-all duration-300 w-10 h-10 group/btn hover:scale-110"
+                                        className="h-8 w-8 bg-black/50 hover:bg-black/70 text-white border-0 rounded-lg transition-colors"
                                         title="Focus on this participant"
                                     >
-                                        <Focus className="w-4.5 h-4.5 text-white transition-transform group-hover/btn:scale-110" />
-
-                                        {/* Button glow effect */}
-                                        <div className="absolute inset-0 bg-gradient-to-br from-blue-400/30 to-purple-400/30 blur-xl opacity-0 group-hover/btn:opacity-100 transition-opacity duration-300" />
-
-                                        {/* Animated ring effect */}
-                                        <div className="absolute inset-0 rounded-full border-2 border-white/0 group-hover/btn:border-white/30 transition-all duration-500" />
+                                        <Focus className="w-3.5 h-3.5" />
                                     </Button>
                                 </div>
 
@@ -88,17 +79,11 @@ function ExpandedVideoGrid({ participants, onToggleFocus, onExitExpanded }: Expa
                 </ScrollArea>
             </div>
 
-            {/* Floating info bar */}
-            <div className="absolute bottom-6 left-1/2 transform -translate-x-1/2 bg-white/5 backdrop-blur-lg border border-white/10 rounded-full px-6 py-3">
-                <div className="flex items-center gap-4">
-                    <span className="text-white/90 text-sm font-medium">
-                        {totalParticipants} participant{totalParticipants !== 1 ? 's' : ''}
-                    </span>
-                    <div className="w-1 h-1 bg-white/30 rounded-full" />
-                    <span className="text-white/70 text-sm">
-                        Click <Focus className="w-3 h-3 inline mx-1" /> to focus on a participant
-                    </span>
-                </div>
+            {/* Participant count */}
+            <div className="absolute bottom-4 left-1/2 -translate-x-1/2">
+                <span className="text-zinc-500 text-xs">
+                    {totalParticipants} participant{totalParticipants !== 1 ? 's' : ''}
+                </span>
             </div>
         </div>
     );

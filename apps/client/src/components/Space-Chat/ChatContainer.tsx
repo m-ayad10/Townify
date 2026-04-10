@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import DashBoardChat from "./DashBoardChat";
 import SpaceChatPanel from "./SpaceChatPanel";
 import { MAIN_SPACE } from "./constants";
@@ -17,16 +17,22 @@ export default function ChatContainer({ isOpen, onOpen, onClose }: Props) {
   const [view, setView] = useState<ChatView>("space");
   const [activeSpace, setActiveSpace] = useState<SpaceInfo>(MAIN_SPACE);
   const [currentSubSpace, setCurrentSubSpace] = useState<SpaceInfo | null>(null);
+  const prevSpaceIdRef = useRef<string | null>(null);
 
   useEffect(() => {
     return subscribeToSpace(space => {
       setCurrentSubSpace(space);
 
       if (space) {
+        const isNewSpace = space.id !== prevSpaceIdRef.current;
+        prevSpaceIdRef.current = space.id;
         setActiveSpace(space);
-        setView("space");
+        if (isNewSpace) {                          
+          setView("space");
+        }
         onOpen();
       } else {
+        prevSpaceIdRef.current = null;
         setActiveSpace(MAIN_SPACE);
         setView("space");
         onClose();

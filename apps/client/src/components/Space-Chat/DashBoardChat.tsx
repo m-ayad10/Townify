@@ -23,12 +23,12 @@ export default function DashBoardChat({
   }
 
   return (
-    <div className="absolute right-0 top-2 z-20 h-[97vh]  w-96 bg-[#202540] text-white flex flex-col rounded-xl shadow-2xl border border-white/10 overflow-hidden">
+    <div className="absolute right-0 top-2 z-20 h-[97vh]  w-96 bg-zinc-900 text-white flex flex-col rounded-xl shadow-2xl border border-white/10 overflow-hidden">
 
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-4 border-b border-white/10 bg-[#1b1f3b]">
+      <div className="flex items-center justify-between px-4 py-4 border-b border-white/10 bg-zinc-950">
         <div className="flex items-center gap-2">
-          <MessageSquare className="w-5 h-5 text-indigo-400" />
+          <MessageSquare className="w-5 h-5 text-zinc-400" />
           <span className="font-bold text-lg">Conversations</span>
         </div>
         <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
@@ -48,20 +48,17 @@ export default function DashBoardChat({
               onClick={() => onOpenSpace(space)}
               className={`
                 group flex items-center gap-4 px-4 py-3 rounded-xl cursor-pointer transition-all duration-200
-                ${isActive ? "bg-indigo-600/20 border border-indigo-500/50" : "hover:bg-white/5 border border-transparent"}
+                ${isActive ? "bg-white/5 border border-white/15" : "hover:bg-white/5 border border-transparent"}
               `}
             >
               {/* Icon */}
-              <div className={`
-                w-10 h-10 rounded-full flex items-center justify-center shadow-lg
-                ${isMain ? "bg-gradient-to-br from-blue-500 to-indigo-600" : "bg-gradient-to-br from-purple-500 to-pink-600"}
-              `}>
-                {isMain ? <MapPin className="h-5 w-5 text-white" /> : <Users className="h-5 w-5 text-white" />}
+              <div className="w-10 h-10 rounded-full flex items-center justify-center bg-zinc-700">
+                {isMain ? <MapPin className="h-5 w-5 text-zinc-300" /> : <Users className="h-5 w-5 text-zinc-300" />}
               </div>
 
               {/* Text */}
               <div className="flex-1">
-                <div className="font-semibold text-sm group-hover:text-indigo-300 transition-colors">
+                <div className="font-semibold text-sm group-hover:text-white transition-colors">
                   {space.name}
                 </div>
                 <div className="text-xs text-gray-400">

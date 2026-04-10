@@ -72,9 +72,9 @@ export default function ChatPanel({
   }, []);
 
   return (
-    <div className="absolute right-0 top-2 z-20 h-[97vh] w-96 bg-[#202540] text-white flex flex-col rounded-xl shadow-2xl border border-white/10 overflow-hidden">
+    <div className="absolute right-0 top-2 z-20 h-[97vh] w-96 bg-zinc-900 text-white flex flex-col rounded-xl shadow-2xl border border-white/10 overflow-hidden">
       {/* HEADER */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#1b1f3b]">
+      <div className="flex items-center justify-between px-4 py-3 border-b border-white/10 bg-zinc-950">
         <div className="flex items-center gap-3">
           {onBack && (
             <ArrowLeft
@@ -171,11 +171,11 @@ export default function ChatPanel({
                 {/* Avatar (Left for Others) */}
                 {!isMe && (
                   <div className="flex flex-col items-center gap-1">
-                    <div className="w-8 h-8 rounded-full bg-pink-500/20 border border-pink-500/50 flex items-center justify-center overflow-hidden">
+                    <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden">
                       {avatar ? (
                         <img src={avatar} className="w-full h-full object-cover" />
                       ) : (
-                        <User className="w-4 h-4 text-pink-400" />
+                        <User className="w-4 h-4 text-zinc-400" />
                       )}
                     </div>
                   </div>
@@ -204,7 +204,7 @@ export default function ChatPanel({
                   <div
                     className={`px-4 py-2 rounded-2xl text-sm border
                     ${isMe
-                        ? "bg-indigo-600/20 border-indigo-500/30 text-indigo-100 rounded-tr-none"
+                        ? "bg-white/10 border-white/10 text-white rounded-tr-none"
                         : "bg-white/5 border-white/10 text-gray-200 rounded-tl-none"
                       }
                   `}
@@ -216,11 +216,11 @@ export default function ChatPanel({
                 {/* Avatar (Right for Me) */}
                 {isMe && (
                   <div className="flex flex-col items-center gap-1">
-                    <div className="w-8 h-8 rounded-full bg-indigo-500/20 border border-indigo-500/50 flex items-center justify-center overflow-hidden">
+                    <div className="w-8 h-8 rounded-full bg-white/10 border border-white/20 flex items-center justify-center overflow-hidden">
                       {avatar ? (
                         <img src={avatar} className="w-full h-full object-cover" />
                       ) : (
-                        <User className="w-4 h-4 text-indigo-400" />
+                        <User className="w-4 h-4 text-zinc-400" />
                       )}
                     </div>
                   </div>
@@ -255,7 +255,7 @@ export default function ChatPanel({
           </div>
         )}
 
-        <div className="flex items-center gap-2 bg-[#1b1f3b] px-3 py-2 rounded-xl">
+        <div className="flex items-center gap-2 bg-zinc-800 px-3 py-2 rounded-xl">
           <Plus className="w-5 h-5" />
           <Smile
             className={`w-5 h-5 cursor-pointer transition-colors ${showEmoji ? "text-yellow-400" : "text-gray-400 hover:text-white"
