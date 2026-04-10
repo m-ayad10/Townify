@@ -75,7 +75,7 @@ export const bulkAddMessages = (msgs: any[]) => {
 };
 
 export const useSpaceChat = () => {
-  const [messages, setMessages] = useState<ChatMessage[]>(globalMessages);
+  const [messages, setMessages] = useState<ChatMessage[]>(() => [...globalMessages]);
 
   useEffect(() => {
     const handler = (payload: ChatMessage | ChatMessage[]) => {
