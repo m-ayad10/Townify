@@ -46,7 +46,21 @@ jobs:
       - name: Write CACHE .env
         run: echo "${{ secrets.CACHE }}" > packages/cache/.env
 
+      - name: Bun install
+        run: npm install -g bun
+
       - name: Build
         run: pnpm run build
+
+      - name: Move Build to nginx html
+        run: |
+          sudo mkdir -p /var/www/townify
+          sudo rm -rf /var/www/townify/*
+          sudo cp -r apps/client/dist/* /var/www/townify/
+          sudo chown -R www-data:www-data /var/www/townify
+          sudo chmod -R 755 /var/www/townify
+
+      - name: pm2 install
+        run: npm install -g pm2
       - name: pm2 restart
-        run: pm2 restart all
+        run: pm2 restart all --update-env || pm2 start ecosystem.config.js
