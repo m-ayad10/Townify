@@ -5,7 +5,12 @@ import { startRedisSubscription } from "./redis/subcribe.js";
 import { handleAuth } from "./handlers/handleAuth.js";
 import { onlineUsers } from "./onlineUsers.js";
 
-const server = createServer();
+const server = createServer((req, res) => {
+  if (req.method === 'GET' && req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'healthy' }));
+  }
+});
 const wss = new WebSocketServer({ server });
 
 wss.on('connection', (ws) => {
