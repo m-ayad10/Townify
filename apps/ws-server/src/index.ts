@@ -4,7 +4,12 @@ import { handleDisconnect, handleMessage } from "./handlers.js";
 import type WebSocket from "ws";
 
 
-const server = createServer();
+const server = createServer((req, res) => {
+    if (req.method === 'GET' && req.url === '/health') {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ status: 'healthy' }));
+    }
+});
 
 server.listen('3008', () => {
     console.log("Server Listing at 3008");
