@@ -44,7 +44,7 @@ jobs:
           cd Gitops
           git clone https://x-access-token:${{ secrets.REPO_B_PAT }}@github.com/m-ayad10/Gitops.git .
 
-          cd townify
+          cd townify/http
 
           echo "before change"
           cat http-manifest.yml
