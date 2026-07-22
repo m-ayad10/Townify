@@ -53,7 +53,6 @@ export const LiveKitProvider: React.FC<{ children: React.ReactNode }> = ({ child
   const [isConnected, setIsConnected] = useState(false);
 
   const LIVEKIT_URL = import.meta.env.VITE_LIVEKIT_URL || "ws://localhost:7880";
-  console.log("LiveKit URL:", LIVEKIT_URL);
 
   const disconnect = async () => {
     if (activeLkRoom) {
